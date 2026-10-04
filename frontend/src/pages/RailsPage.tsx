@@ -283,7 +283,17 @@ export default function RailsPage() {
             <button className="btn btn-primary" disabled={gnani.isPending || recording}>
               {gnani.isPending ? "Calling Gnani…" : "Send voice note to Gnani"}
             </button>
-            <MutationFeedback mutation={gnani} success="Gnani response recorded in the connector ledger." />
+            {gnani.isSuccess && gnani.data.status !== "live_succeeded" ? (
+              <p className="error-text" role="alert">
+                Gnani returned a failed live response. The failure was preserved in the connector
+                ledger; inspect it before retrying.
+              </p>
+            ) : (
+              <MutationFeedback
+                mutation={gnani}
+                success="Gnani transcription succeeded and was recorded in the connector ledger."
+              />
+            )}
           </form>
         </Panel>
         <Panel title="2. Record Pine Labs response" kicker="DOCUMENTATION SIMULATION">
