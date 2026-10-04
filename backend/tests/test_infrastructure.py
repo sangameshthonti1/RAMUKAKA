@@ -29,16 +29,23 @@ def test_real_modes_fail_closed(mode):
 @pytest.mark.parametrize(
     "origin",
     [
-        "https://example.org",
+        "http://example.org",
         "*",
         "http://localhost:5173/path",
         "http://user:pass@localhost:5173",
         "http://localhost:5173?x=1",
+        "https://*.example.org",
+        "ftp://example.org",
     ],
 )
-def test_nonlocal_cors_config_rejected(origin):
+def test_unsafe_cors_config_rejected(origin):
     with pytest.raises(ValidationError):
         Settings(frontend_origin=origin)
+
+
+def test_exact_https_frontend_origin_supported():
+    settings = Settings(frontend_origin="https://ramukaka.runs-on.dev")
+    assert settings.frontend_origin == "https://ramukaka.runs-on.dev"
 
 
 def test_external_database_config_rejected():

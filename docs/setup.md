@@ -21,7 +21,7 @@ Use Python 3.12, Node 22.12+ (24 LTS recommended), and npm. The current workspac
 | `PINE_LABS_API_KEY`     | Empty, reserved                                                  |
 | `DELHIVERY_API_KEY`     | Empty, reserved                                                  |
 | `WHATSAPP_ACCESS_TOKEN` | Empty, reserved                                                  |
-| `RK_FRONTEND_ORIGIN`    | `http://localhost:5173`; exact loopback origin only              |
+| `RK_FRONTEND_ORIGIN`    | `http://localhost:5173`; exact local HTTP or deployed HTTPS origin |
 | `RK_AUTO_MIGRATE`       | `true`; startup applies migrations                               |
 | `RK_AUTO_SEED`          | `true`; startup seeds when demo is missing                       |
 
@@ -64,9 +64,15 @@ Use http://127.0.0.1:5173: `/` offers a customer or provider portal, `/customer/
 
 Build with `npm run build`; nginx's SPA fallback serves deep links in Compose. The backend image uses Python 3.12 and a non-root user; a named volume preserves database data. Compose loads only safe example values and forces mock mode. Docker must be installed; see verification record for whether it was available.
 
+For the protected online competition demo, use the root `render.yaml` and `Dockerfile.render` rather
+than the local Compose file. Follow the exact [Render deployment guide](deployment-render.md). The
+hosted image fails closed without a secret demo PIN, rate-limits Gnani, exposes only `/health`
+without authentication and persists SQLite on one attached disk. This is still not production
+identity or multi-tenant authorization.
+
 ## Validation
 
-Current integration-MVP validation: **217 backend tests** and **51 frontend tests** passed; frontend lint and production build passed. The suite uses a fake HTTP transport to verify the Gnani contract without exposing a credential or making a billable vendor request. Run a final real Gnani rehearsal locally after configuring the key. To run real-server API and browser checks from the root, use `backend/.venv/bin/python scripts/smoke.py --browser` (or alternate ports). It uses an isolated temporary SQLite database and shuts down its subprocesses.
+Current integration-MVP validation: **220 backend tests** and **55 frontend tests** passed; frontend lint and production build passed. The suite uses a fake HTTP transport to verify the Gnani contract without exposing a credential or making a billable vendor request. Run a final real Gnani rehearsal locally after configuring the key. To run real-server API and browser checks from the root, use `backend/.venv/bin/python scripts/smoke.py --browser` (or alternate ports). It uses an isolated temporary SQLite database and shuts down its subprocesses.
 
 ## Troubleshooting
 

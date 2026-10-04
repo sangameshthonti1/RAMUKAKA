@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: ramukaka-round3
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile.render
+    dockerContext: .
+    healthCheckPath: /health
+    numInstances: 1
+    disk:
+      name: ramukaka-data
+      mountPath: /backend/data
+      sizeGB: 1
+    envVars:
+      - key: APP_ENV
+        value: competition-demo
+      - key: DATABASE_URL
+        value: sqlite:////backend/data/ramu_kaka.db
+      - key: CONNECTOR_MODE
+        value: mock
+      - key: AI_PROVIDER
+        value: mock
+      - key: RK_AUTO_MIGRATE
+        value: "true"
+      - key: RK_AUTO_SEED
+        value: "true"
+      - key: RK_SERVICE_REMINDERS_ENABLED
+        value: "true"
+      - key: GNANI_LIVE_ENABLED
+        value: "true"
+      - key: GNANI_STT_URL
+        value: https://api.vachana.ai/stt/v3
+      - key: GNANI_API_KEY
+        sync: false
+      - key: RK_DEMO_ACCESS_PIN
+        sync: false

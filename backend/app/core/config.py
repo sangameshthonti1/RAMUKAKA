@@ -80,20 +80,23 @@ class Settings(BaseSettings):
 
     @field_validator("frontend_origin")
     @classmethod
-    def local_origin(cls, value: str) -> str:
+    def exact_frontend_origin(cls, value: str) -> str:
         parsed = urlparse(value)
         if parsed.port is not None and not 1 <= parsed.port <= 65535:
             raise ValueError("Frontend origin has an invalid port")
         if (
-            parsed.scheme != "http"
-            or parsed.hostname not in {"localhost", "127.0.0.1"}
+            parsed.scheme not in {"http", "https"}
+            or not parsed.hostname
+            or "*" in parsed.hostname
             or parsed.username
             or parsed.password
             or parsed.path
             or parsed.query
             or parsed.fragment
         ):
-            raise ValueError("Frontend origin must be an exact local HTTP origin without a path")
+            raise ValueError("Frontend origin must be one exact HTTP(S) origin without a path")
+        if parsed.scheme == "http" and parsed.hostname not in {"localhost", "127.0.0.1"}:
+            raise ValueError("Non-local frontend origins must use HTTPS")
         return value
 
     @field_validator("gnani_stt_url")

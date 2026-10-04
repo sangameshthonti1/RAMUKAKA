@@ -120,7 +120,7 @@ The SQLite snapshot is verified and written under `backend/data/backups/` (ignor
 
 ## Tests and build
 
-In this workspace: **160 backend tests** and **44 frontend tests** passed; frontend lint and build also passed. Re-run with:
+In this workspace: **220 backend tests** and **55 frontend tests** passed; frontend lint and build also passed. Re-run with:
 
 ```sh
 # From backend/
@@ -178,6 +178,15 @@ docker compose up --build
 ```
 
 Ports are loopback-bound at 5173/8000. SQLite persists in a named volume; nginx proxies the API. Docker is optional and must be installed separately. Container builds are not implied by passing local tests.
+
+## Protected online competition demo
+
+The repository includes a separate single-service Render deployment in `render.yaml` and
+`Dockerfile.render`. It serves the frontend and FastAPI on one origin, stores SQLite on one attached
+disk, requires the username `demo` plus a secret PIN, rate-limits live Gnani uploads and leaves only
+`/health` unauthenticated. Follow [the Render and `runs-on.dev` guide](docs/deployment-render.md).
+This access gate is suitable for the bounded jury demo; it does not turn the application into a
+public multi-user production service.
 
 ## Limits and next steps
 
