@@ -67,8 +67,8 @@ Build with `npm run build`; nginx's SPA fallback serves deep links in Compose. T
 For the protected online competition demo, use the root `render.yaml` and `Dockerfile.render` rather
 than the local Compose file. Follow the exact [Render deployment guide](deployment-render.md). The
 hosted image fails closed without a secret demo PIN, rate-limits Gnani, exposes only `/health`
-without authentication and persists SQLite on one attached disk. This is still not production
-identity or multi-tenant authorization.
+without authentication and uses ephemeral SQLite on Render's Free plan. Its demo data can reset on
+spin-down, restart or deploy. This is still not production identity or multi-tenant authorization.
 
 ## Validation
 

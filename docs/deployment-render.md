@@ -1,9 +1,10 @@
 # Protected Render deployment
 
 This deployment is for the Round 3 demonstration, not an unauthenticated production rollout. It
-runs the built React application, nginx and one FastAPI worker in a single Render web service. A
-single attached disk owns the SQLite database. Do not scale this service above one instance while
-it uses SQLite.
+runs the built React application, nginx and one FastAPI worker in a single free Render web service.
+Its SQLite database is intentionally ephemeral: Render can erase it whenever the free service
+spins down, restarts or redeploys. Startup recreates the seeded demo state. Do not use the free
+deployment for unique evidence or data that cannot be recreated.
 
 ## What the deployment files enforce
 
@@ -28,8 +29,8 @@ isolation, authorization, account recovery or an audit-grade identity system.
 1. Merge or select the branch containing `render.yaml` and `Dockerfile.render`.
 2. Sign in to Render and choose **New → Blueprint**.
 3. Connect `sangameshthonti1/RAMUKAKA` and select the deployment branch.
-4. Render reads the root `render.yaml`. Review the proposed `ramukaka-round3` web service, Starter
-   plan, one instance and 1 GB disk mounted at `/backend/data`.
+4. Render reads the root `render.yaml`. Confirm that the proposed `ramukaka-round3` web service is
+   on the **Free** plan and has **no persistent disk** before applying it.
 5. Supply both prompted secrets:
    - `GNANI_API_KEY`: the rotated Gnani key. Never paste it into GitHub or a frontend variable.
    - `RK_DEMO_ACCESS_PIN`: a new private PIN/passphrase of at least eight characters.
@@ -38,8 +39,20 @@ isolation, authorization, account recovery or an audit-grade identity system.
    Enter username `demo` and the PIN from step 5.
 
 The database URL is already fixed to `sqlite:////backend/data/ramu_kaka.db`. Startup applies
-migrations and idempotently adds missing demo fixtures. The attached disk preserves changes across
-restarts and deploys. Do not create a second service against the same SQLite file.
+migrations and idempotently adds missing demo fixtures. On the Free plan this file does **not**
+survive a spin-down, restart or deploy. Rehearse from freshly seeded state, and do not rely on a
+case created online still being present later.
+
+The Free service can also sleep after inactivity and take about a minute to wake. Open the site a
+few minutes before recording. Upgrade only when durable demo state becomes necessary: change the
+service to a paid compute plan, attach one persistent disk at `/backend/data`, and keep a single
+instance while SQLite is in use.
+
+Adding a card is not a one-time purchase. Render's USD 1 card check is a temporary authorization,
+but a card left on the account can be charged for paid resources or usage beyond included limits.
+Check the Render Billing page and configure available spend limits before enabling paid resources.
+If Render requests a card only to verify a free account, the service must still show **Free** and
+no disk before deployment; account verification does not itself convert this Blueprint to paid.
 
 ## 2. Connect a `runs-on.dev` name
 
@@ -67,20 +80,19 @@ verification request.
 4. Record a short voice note and verify a `live_succeeded` ledger entry.
 5. Review the transcript before attaching it as `REAL_HUMAN_INPUT`.
 6. Verify Pine Labs and Delhivery still say `DOCUMENTATION_SIMULATION`.
-7. Create a manual Render disk backup before the final jury rehearsal.
+7. Keep a local copy of any special rehearsal inputs; the free deployment has no durable disk.
 
 ## Operations and rollback
 
 - Change the PIN or Gnani key only in Render's secret settings, then redeploy.
 - A `429` on Gnani means the demo rate limit was reached; wait rather than bypassing it.
-- Render deploy rollback changes the image, not the persisted database. Use a disk snapshot for data
-  rollback.
+- Every free-service spin-down, restart or deploy can reset SQLite to the seeded demo state.
 - Keep one worker and one service while using SQLite. PostgreSQL, real identity, per-household
   authorization and durable job infrastructure are prerequisites for a public multi-user product.
-- To take the demo offline without losing its disk, suspend the Render service or remove the custom
-  domain. Do not delete the disk unless its verified backup is no longer needed.
+- To take the demo offline, suspend the Render service or remove the custom domain.
 
 Official references: [Render Blueprints](https://render.com/docs/infrastructure-as-code),
 [Render Docker](https://render.com/docs/docker), [Render disks](https://render.com/docs/disks),
+[Render Free services](https://render.com/docs/free),
 [Render custom domains](https://render.com/docs/custom-domains), and
 [`runs-on.dev` records](https://runs-on.dev/docs/records).

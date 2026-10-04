@@ -2,15 +2,11 @@ services:
   - type: web
     name: ramukaka-round3
     runtime: docker
-    plan: starter
+    plan: free
     dockerfilePath: ./Dockerfile.render
     dockerContext: .
     healthCheckPath: /health
     numInstances: 1
-    disk:
-      name: ramukaka-data
-      mountPath: /backend/data
-      sizeGB: 1
     envVars:
       - key: APP_ENV
         value: competition-demo

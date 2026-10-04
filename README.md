@@ -182,11 +182,12 @@ Ports are loopback-bound at 5173/8000. SQLite persists in a named volume; nginx 
 ## Protected online competition demo
 
 The repository includes a separate single-service Render deployment in `render.yaml` and
-`Dockerfile.render`. It serves the frontend and FastAPI on one origin, stores SQLite on one attached
-disk, requires the username `demo` plus a secret PIN, rate-limits live Gnani uploads and leaves only
+`Dockerfile.render`. It serves the frontend and FastAPI on one origin, stores SQLite on Render's
+ephemeral free-tier filesystem, requires the username `demo` plus a secret PIN, rate-limits live
+Gnani uploads and leaves only
 `/health` unauthenticated. Follow [the Render and `runs-on.dev` guide](docs/deployment-render.md).
 This access gate is suitable for the bounded jury demo; it does not turn the application into a
-public multi-user production service.
+public multi-user production service. Free-tier SQLite can reset on spin-down, restart or deploy.
 
 ## Limits and next steps
 
