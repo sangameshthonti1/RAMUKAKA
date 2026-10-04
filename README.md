@@ -1,4 +1,4 @@
-# Ramu Kaka — Round 3
+# Ramu Kaka 
 
 An auditable household asset-memory and service-coordination application for The Ken Case Competition. Ramu Kaka connects an appliance's history, a repair case, scoped human permissions, provider work, and household verification in one shared record.
 
