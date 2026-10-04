@@ -25,7 +25,7 @@ These are working local reminders, **not SMS, WhatsApp, email, browser push or p
 
 ## Automatic local coordination
 
-For a new case, save household coordinates in its customer case view and shop coordinates in the provider portal. Opening an eligible customer case automatically chooses the nearest available matching **recorded** shop, persists a simulated provider conversation, and prepares a fixture offer. The customer approves **total cost and timing together**; assignment then happens automatically using local mocks. The provider portal's **Report simulated completion (mock)** action records provider-reported completion and a local customer notification. It never fabricates household verification.
+For a new case, save household coordinates in it's customer case view and shop coordinates in the provider portal. Opening an eligible customer case automatically chooses the nearest available matching **recorded** shop, persists a simulated provider conversation, and prepares a fixture offer. The customer approves **total cost and timing together**; assignment then happens automatically using local mocks. The provider portal's **Report simulated completion (mock)** action records provider-reported completion and a local customer notification. It never fabricates household verification.
 
 The fixture total is **INR 1,500**, with a next-day **10:00–12:00 UTC** simulated slot. These are demonstration values, not market prices or actual availability. Distances use saved coordinates and Haversine straight-line distance, not road travel. Shops with unknown coordinates are excluded. State survives reload/restart; automatic offer preparation happens when the customer case page is open, not through a background worker.
 
@@ -152,7 +152,7 @@ The smoke script starts bounded subprocesses, uses an isolated temporary databas
 3. Click **Try mock payment** before approving: the backend denies it and records the rule.
 4. Return to Simulation. Click **Run one step** six times: approval → assignment/mock payment → service evidence → provider confirmation → household confirmation → closure.
 5. Inspect the full timeline, evidence, decisions, request/response logs and truth labels.
-6. To demonstrate manual closure, reset, advance three steps, then use the Provider confirmation in `/provider` and Household confirmation in `/customer/cases/RK-2048` with matching demo attribution. Only the second confirmation closes the case. An unresolved report reopens it. For a new case without simulation, follow the [working model guide](docs/working-model.md).
+6. To demonstrate manual closure, reset, advance three steps, then use the Provider confirmation in `/provider` and Household confirmation in `/customer/cases/RK-2048` with matching demo attribution. Only the second confirmation closes the case. An unresolved report reopens it. For a new case without simulation,follow the [working model guide](docs/working-model.md).
 
 A rejected quote blocks advancement; the simulator never silently reverses a rejection. All scripted approvals and confirmations are documentary fixtures, not actual people authorizing real transactions. See [simulation guide](docs/simulation-guide.md).
 
