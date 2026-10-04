@@ -183,6 +183,20 @@ export interface DocumentedRailResponse {
   request: Record<string, unknown>;
   response: Record<string, unknown>;
 }
+export interface AgentContract {
+  provider: "mock" | "gemini";
+  model: string;
+  ready: boolean;
+  blocker: string | null;
+}
+export interface AgentRun {
+  case_id: string;
+  model: string;
+  status: "live_succeeded" | "live_failed";
+  decision: Decision | null;
+  notification: Notification | null;
+  connector_call: ConnectorCall;
+}
 export interface SimulationState {
   step: number;
   total_steps: number;

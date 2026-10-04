@@ -129,6 +129,22 @@ class Notification(Record):
     status: str
 
 
+class AgentContract(Output):
+    provider: Literal["mock", "gemini"]
+    model: str
+    ready: bool
+    blocker: str | None
+
+
+class AgentRun(Output):
+    case_id: str
+    model: str
+    status: Literal["live_succeeded", "live_failed"]
+    decision: Decision | None
+    notification: Notification | None
+    connector_call: ConnectorCall
+
+
 class Provider(ManagedRecord):
     name: str
     shop_address: str | None

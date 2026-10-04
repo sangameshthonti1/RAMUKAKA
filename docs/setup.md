@@ -13,8 +13,9 @@ Use Python 3.12, Node 22.12+ (24 LTS recommended), and npm. The current workspac
 | `APP_ENV`               | `development`; deployment metadata, not an authentication switch |
 | `DATABASE_URL`          | Absolute local SQLite URL ending in `backend/data/ramukaka.db`   |
 | `CONNECTOR_MODE`        | `mock` only; any other value rejects startup                     |
-| `AI_PROVIDER`           | `mock` only; Gemini/Claude/OpenAI adapters are future extensions |
-| `AI_API_KEY`            | Empty, backend-only reserved secret                              |
+| `AI_PROVIDER`           | `mock` by default; set `gemini` only for the reviewed live adapter |
+| `AI_MODEL`              | `gemini-3.8-flash`; other model IDs fail closed                  |
+| `GEMINI_API_KEY`        | Empty; backend-only secret required for live agent decisions     |
 | `GNANI_API_KEY`         | Empty; required only for the explicit live Gnani STT console     |
 | `GNANI_LIVE_ENABLED`    | `false`; must be `true` to permit the reviewed Gnani endpoint    |
 | `GNANI_STT_URL`         | Reviewed `https://api.vachana.ai/stt/v3`; other URLs are rejected |
@@ -25,7 +26,7 @@ Use Python 3.12, Node 22.12+ (24 LTS recommended), and npm. The current workspac
 | `RK_AUTO_MIGRATE`       | `true`; startup applies migrations                               |
 | `RK_AUTO_SEED`          | `true`; startup seeds when demo is missing                       |
 
-Canonical `DATABASE_URL`/`CONNECTOR_MODE` override their old `RK_` aliases. Secrets are `SecretStr`, excluded from representation and serialization, and are never sent to the frontend. Default rehearsal needs no key. A live Gnani demonstration requires a local, untracked `.env`; never paste the key into source, screenshots, logs or commits.
+Canonical `DATABASE_URL`/`CONNECTOR_MODE` override their old `RK_` aliases. Secrets are `SecretStr`, excluded from representation and serialization, and are never sent to the frontend. Live Gnani and Gemini demonstrations require backend-only secrets in an untracked environment or Render secret settings; never paste keys into source, screenshots, logs or commits.
 
 Settings intentionally do not implicitly read `.env`. Uvicorn can explicitly load `.env.example` with `--env-file ../.env.example` from backend. Alembic/seed CLI use exported variables, so export the same `DATABASE_URL` for all three processes if overriding it. Relative SQLite paths resolve under `backend/` regardless of working directory; outside paths are rejected.
 
@@ -72,7 +73,7 @@ spin-down, restart or deploy. This is still not production identity or multi-ten
 
 ## Validation
 
-Current integration-MVP validation: **220 backend tests** and **55 frontend tests** passed; frontend lint and production build passed. The suite uses a fake HTTP transport to verify the Gnani contract without exposing a credential or making a billable vendor request. Run a final real Gnani rehearsal locally after configuring the key. To run real-server API and browser checks from the root, use `backend/.venv/bin/python scripts/smoke.py --browser` (or alternate ports). It uses an isolated temporary SQLite database and shuts down its subprocesses.
+Current integration-MVP validation: **223 backend tests** and **56 frontend tests** passed; frontend lint and production build passed. Fake HTTP transports verify the Gnani and Gemini contracts without exposing credentials or making billable vendor requests. Run final real rehearsals after configuring both keys. To run real-server API and browser checks from the root, use `backend/.venv/bin/python scripts/smoke.py --browser` (or alternate ports). It uses an isolated temporary SQLite database and shuts down its subprocesses.
 
 ## Troubleshooting
 

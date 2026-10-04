@@ -15,8 +15,8 @@ The canonical agent instruction is `backend/app/agent/prompt.py`, exposed by `/a
 | Closure                  | Assigned approved service + current service evidence + both provider and household flags                                                                                       |
 | Unresolved               | Clears the reporting party's confirmation, leaves/reopens case; scripted progression cannot override it                                                                        |
 | Forged events            | Generic endpoint permits only customer notes/emergency reports, not approvals, completion flags or service proof                                                               |
-| Evidence truth           | Gnani is LIVE_API only when the reviewed endpoint is actually called; Pine Labs/Delhivery wizard responses remain DOCUMENTATION_SIMULATION                                    |
-| Unsupported integrations | Default workflows stay mock; Gnani requires explicit enablement/key; partner URL allowlists reject invented endpoints                                                          |
+| Evidence truth           | Gnani/Gemini are LIVE_API only when their reviewed endpoints are actually called; Pine Labs/Delhivery wizard responses remain DOCUMENTATION_SIMULATION                         |
+| Unsupported integrations | Default workflow rails stay mock; Gnani/Gemini require explicit enablement and backend keys; partner URL allowlists reject invented endpoints                                  |
 | Audit                    | Decisions include rules; connector operations are allowlisted reference-only request/response logs                                                                             |
 | Errors                   | No raw validation input or exception details reflected to clients; transaction rollback precedes denial audit                                                                  |
 
@@ -30,7 +30,7 @@ Customers or locally attributed providers can register provider-linked service d
 
 ## Truth labels
 
-- `LIVE_API`: server-reported response from the explicitly enabled Gnani STT endpoint. A configured adapter that was not called is not live evidence.
+- `LIVE_API`: server-reported response from an explicitly enabled Gnani STT or Gemini decision endpoint. A configured adapter that was not called is not live evidence.
 - `REAL_HUMAN_INPUT`: an actual local form submission. This labels provenance, not proof of identity or correctness.
 - `DOCUMENTATION_SIMULATION`: seeded examples, mock connectors, scripted approvals/confirmations, simulated evidence.
 - `PROPOSED_CAPABILITY`: a future capability with no implemented integration or verified outcome.

@@ -1,6 +1,8 @@
 import { getDemoRole } from "../store/demo";
 import type {
   ApprovalKind,
+  AgentContract,
+  AgentRun,
   Asset,
   CaseAction,
   CaseDetail,
@@ -122,6 +124,9 @@ export const api = {
   rails: () => request<Rail[]>("/rails"),
   partnerContracts: () =>
     request<PartnerRailContract[]>("/partner-rails/contracts"),
+  agentContract: () => request<AgentContract>("/agent/contract"),
+  runAgentDecision: (caseId: string) =>
+    request<AgentRun>(`/agent/${encodeURIComponent(caseId)}/decide`, {}),
   recordDocumentedResponse: (
     caseId: string,
     body: DocumentedRailResponse,

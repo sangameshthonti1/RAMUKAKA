@@ -19,6 +19,7 @@ The MVP now separates internal coordination from partner logistics and provides 
 | Provider and household must both finish | Closure guard and unresolved/reopen path implemented | Complete |
 | Five-minute deterministic recording | RK-2048 reset and six-step progression implemented | Complete; final rehearsal/recording remains an operator task |
 | Gnani must actually process audio/text | Baseline mock only | Live multipart STT adapter and UI added; real vendor rehearsal needs a local key |
+| Agent must be an AI model following the prompt | Baseline deterministic rules only | Reviewed Gemini 3.8 Flash adapter chooses one server-allowlisted next action; real rehearsal needs a backend key |
 | Pine Labs may use documented responses | Baseline generic mock receipt | Official UAT payment-link contract recorder added; approval and amount checked |
 | Delhivery may use documented responses | Baseline incorrectly represented technician assignment as Delhivery | Internal coordinator separated; exact official B2C request/response recorder added |
 | Every partner request/response visible | Generic connector ledger existed | Competition calls now preserve endpoint, documentation source and exact response |
@@ -54,11 +55,11 @@ The MVP now separates internal coordination from partner logistics and provides 
 
 ## Verified build
 
-- Backend: 217 tests passed.
-- Frontend: 51 tests passed.
+- Backend: 223 tests passed.
+- Frontend: 56 tests passed.
 - Frontend lint: passed with zero warnings.
 - Frontend production build: passed.
-- Gnani live code path: contract-tested with an in-memory fake HTTP response; no credential was logged.
+- Gnani and Gemini live code paths: contract-tested with in-memory fake HTTP responses; no credential was logged.
 
 ## Explicit non-goals for this submission
 

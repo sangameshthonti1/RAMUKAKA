@@ -6,6 +6,22 @@ import { renderApp } from "./render";
 import { installPortalMockApi } from "./portalMocks";
 import { keys } from "../src/hooks/useApi";
 describe("human decisions and server guard feedback", () => {
+  it("shows the real model decision, canonical guard rule, and exact in-app message", async () => {
+    const mock = installMockApi();
+    renderApp("/project/rails");
+    const user = userEvent.setup();
+    await user.selectOptions(
+      await screen.findByLabelText("Target case and appliance"),
+      "RK-2048",
+    );
+    await user.click(screen.getByRole("button", { name: "Run agent decision" }));
+    expect(await screen.findByText("request household approval")).toBeInTheDocument();
+    expect(screen.getByText("APPROVAL_REQUIRED")).toBeInTheDocument();
+    expect(screen.getByText("Please approve or reject the ₹749 quote.")).toBeInTheDocument();
+    expect(screen.getByText("To: in_app:household")).toBeInTheDocument();
+    expect(mock.posts[0].path).toBe("/api/agent/RK-2048/decide");
+  });
+
   it("attaches a reviewed live transcript only to the explicitly selected case", async () => {
     const mock = installMockApi();
     const original = mock.fetchMock.getMockImplementation()!;

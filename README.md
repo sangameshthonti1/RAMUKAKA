@@ -120,7 +120,7 @@ The SQLite snapshot is verified and written under `backend/data/backups/` (ignor
 
 ## Tests and build
 
-In this workspace: **220 backend tests** and **55 frontend tests** passed; frontend lint and build also passed. Re-run with:
+In this workspace: **223 backend tests** and **56 frontend tests** passed; frontend lint and build also passed. Re-run with:
 
 ```sh
 # From backend/
@@ -165,11 +165,12 @@ A rejected quote blocks advancement; the simulator never silently reverses a rej
 | Delhivery competition console   | Wizard records the exact official B2C shipment/tracking request and response; no shipment is created |
 | Default scripted workflow       | Deterministic local mocks remain available for repeatable rehearsal                   |
 | WhatsApp / Email                | Local connector logs; nothing delivered                                              |
-| Service chat / AI provider      | Persisted local messages and deterministic rules/fixtures; no model inference        |
-| Gemini / Claude / OpenAI        | Provider extension interface only; real adapters are proposed, disabled              |
+| Service chat                    | Persisted local messages and deterministic rules/fixtures                             |
+| Gemini agent decision           | Optional live `gemini-3.8-flash` structured next-action decision; server allowlist and guards remain authoritative |
+| Claude / OpenAI                 | Proposed only; no adapter enabled                                                      |
 | Local FastAPI / SQLite / signup | Actually executed locally; not an external `LIVE_API` integration                    |
 
-`LIVE_API` is used only for the server-recorded Gnani HTTP request/response when live mode is explicitly enabled. Pine Labs and Delhivery remain `DOCUMENTATION_SIMULATION`, as required by the Wizard-of-Oz brief. Local user submissions are `REAL_HUMAN_INPUT`; roadmap claims are `PROPOSED_CAPABILITY`.
+`LIVE_API` is used only for server-recorded Gnani and Gemini HTTP calls when each is explicitly enabled. Pine Labs and Delhivery remain `DOCUMENTATION_SIMULATION`, as required by the Wizard-of-Oz brief. Local user submissions are `REAL_HUMAN_INPUT`; roadmap claims are `PROPOSED_CAPABILITY`.
 
 ## Containers
 

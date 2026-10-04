@@ -2391,6 +2391,69 @@
         }
       }
     },
+    "/api/agent/contract": {
+      "get": {
+        "tags": [
+          "live agent"
+        ],
+        "summary": "Agent Contract",
+        "operationId": "agent_contract_api_agent_contract_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentContract"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/{case_id}/decide": {
+      "post": {
+        "tags": [
+          "live agent"
+        ],
+        "summary": "Agent Decision",
+        "operationId": "agent_decision_api_agent__case_id__decide_post",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Case Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRun"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/service-schedules": {
       "post": {
         "tags": [
@@ -3235,6 +3298,98 @@
           "action"
         ],
         "title": "ActionRequest"
+      },
+      "AgentContract": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "mock",
+              "gemini"
+            ],
+            "title": "Provider"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready"
+          },
+          "blocker": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocker"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "model",
+          "ready",
+          "blocker"
+        ],
+        "title": "AgentContract"
+      },
+      "AgentRun": {
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "title": "Case Id"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "live_succeeded",
+              "live_failed"
+            ],
+            "title": "Status"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Decision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notification": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Notification"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "connector_call": {
+            "$ref": "#/components/schemas/ConnectorCall"
+          }
+        },
+        "type": "object",
+        "required": [
+          "case_id",
+          "model",
+          "status",
+          "decision",
+          "notification",
+          "connector_call"
+        ],
+        "title": "AgentRun"
       },
       "Approval": {
         "properties": {

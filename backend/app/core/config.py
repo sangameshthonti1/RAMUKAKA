@@ -24,8 +24,16 @@ class Settings(BaseSettings):
         default="mock", validation_alias=AliasChoices("AI_PROVIDER", "RK_AI_PROVIDER")
     )
     ai_api_key: SecretStr = Field(
-        default=SecretStr(""), validation_alias="AI_API_KEY", repr=False, exclude=True
+        default=SecretStr(""),
+        validation_alias=AliasChoices("GEMINI_API_KEY", "AI_API_KEY", "RK_AI_API_KEY"),
+        repr=False,
+        exclude=True,
     )
+    ai_model: str = Field(
+        default="gemini-3.8-flash",
+        validation_alias=AliasChoices("AI_MODEL", "RK_AI_MODEL"),
+    )
+    ai_timeout_seconds: float = Field(default=45, ge=1, le=120)
     gnani_api_key: SecretStr = Field(
         default=SecretStr(""), validation_alias="GNANI_API_KEY", repr=False, exclude=True
     )
@@ -55,11 +63,16 @@ class Settings(BaseSettings):
 
     @field_validator("ai_provider")
     @classmethod
-    def mock_model_only(cls, value: str) -> str:
-        if value != "mock":
-            raise ValueError(
-                "Real AI providers are unsupported; implement and review an adapter before enabling one"
-            )
+    def reviewed_model_only(cls, value: str) -> str:
+        if value not in {"mock", "gemini"}:
+            raise ValueError("Only mock and the reviewed Gemini adapter are supported")
+        return value
+
+    @field_validator("ai_model")
+    @classmethod
+    def reviewed_gemini_model(cls, value: str) -> str:
+        if value != "gemini-3.8-flash":
+            raise ValueError("Use the reviewed stable Gemini 3.8 Flash model")
         return value
 
     @field_validator("connector_mode")

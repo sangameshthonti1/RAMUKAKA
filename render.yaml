@@ -15,7 +15,11 @@ services:
       - key: CONNECTOR_MODE
         value: mock
       - key: AI_PROVIDER
-        value: mock
+        value: gemini
+      - key: AI_MODEL
+        value: gemini-3.8-flash
+      - key: GEMINI_API_KEY
+        sync: false
       - key: RK_AUTO_MIGRATE
         value: "true"
       - key: RK_AUTO_SEED

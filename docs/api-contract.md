@@ -79,6 +79,8 @@ Coordinator responses include `{case_id, mode: "local_mock", real_calls_supporte
 | GET    | `/api/rails`                                                  | Adapter capabilities and labels                                                         |
 | GET    | `/api/partner-rails/contracts`                                | Reviewed competition endpoints, execution mode, readiness and documentation source       |
 | POST   | `/api/partner-rails/{case_id}/gnani/transcribe`                | Multipart live Gnani STT call; local key required; raw response preserved                 |
+| GET    | `/api/agent/contract`                                         | Gemini model readiness without exposing the key                                            |
+| POST   | `/api/agent/{case_id}/decide`                                 | Live structured next-action decision; server allowlist and workflow guards remain final    |
 | POST   | `/api/partner-rails/{case_id}/documented-response`             | Record exact Pine Labs or Delhivery request/response from official documentation          |
 | GET    | `/api/system-prompt`                                          | Canonical backend prompt                                                                |
 | GET    | `/api/simulation`                                             | Step, total, next event, complete, case ID                                              |

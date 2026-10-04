@@ -118,6 +118,10 @@ export default function RailsPage() {
     queryKey: keys.partnerContracts,
     queryFn: api.partnerContracts,
   });
+  const agentContract = useQuery({
+    queryKey: keys.agentContract,
+    queryFn: api.agentContract,
+  });
   const selectedCase = cases.data?.find((item) => item.id === caseId);
   const gnani = useApiMutation(
     ({ audio, language }: { audio: File; language: string }) =>
@@ -127,6 +131,7 @@ export default function RailsPage() {
   const attachTranscript = useApiMutation((detail: string) =>
     api.event(caseId, { type: "customer_note", detail }),
   );
+  const agent = useApiMutation(() => api.runAgentDecision(caseId));
   const pine = useApiMutation(
     (data: FormData) =>
       api.recordDocumentedResponse(caseId, {
@@ -205,6 +210,59 @@ export default function RailsPage() {
           <EmptyState title="No rails declared by the backend" />
         )}
       </QueryState>
+      <Panel title="Live agent decision" kicker="GEMINI · SYSTEM PROMPT" className="mt-6">
+        <div className="form-stack">
+          <div className="record-heading">
+            <div>
+              <strong>{agentContract.data?.model ?? "Gemini"}</strong>
+              <p className="small muted mt-2">
+                The model chooses one server-allowed next action. Backend approval and closure
+                guards remain authoritative.
+              </p>
+            </div>
+            <StatusBadge status={agentContract.data?.ready ? "ready" : "setup required"} />
+          </div>
+          {agentContract.data?.blocker && (
+            <p className="form-note">{agentContract.data.blocker}</p>
+          )}
+          <button
+            className="btn btn-primary"
+            type="button"
+            disabled={!caseId || !agentContract.data?.ready || agent.isPending}
+            onClick={() => agent.mutate(undefined)}
+          >
+            {agent.isPending ? "Gemini is deciding…" : "Run agent decision"}
+          </button>
+          <MutationFeedback
+            mutation={agent}
+            success="Gemini chose a next action and the backend recorded its exact in-app message."
+          />
+          {agent.data?.decision && agent.data.notification && (
+            <div className="disclosure">
+              <div className="record-heading">
+                <h3>{agent.data.decision.action.replaceAll("_", " ")}</h3>
+                <TruthBadge label="LIVE_API" />
+              </div>
+              <p className="mt-3">{agent.data.decision.reason}</p>
+              <div className="rule-box mt-3">
+                <span className="tiny-label">RULE APPLIED</span>
+                <p>{agent.data.decision.rule}</p>
+              </div>
+              <div className="disclosure mt-3">
+                <span className="tiny-label">ACTUAL IN-APP MESSAGE</span>
+                <p className="mt-2">{agent.data.notification.message}</p>
+                <p className="small muted mt-2">To: {agent.data.notification.channel}</p>
+              </div>
+            </div>
+          )}
+          {agent.data?.status === "live_failed" && (
+            <p className="error-text" role="alert">
+              Gemini did not return a valid allowed decision. The failed call was recorded; no
+              action or message was created.
+            </p>
+          )}
+        </div>
+      </Panel>
       <QueryState
         pending={contracts.isPending}
         error={contracts.error}

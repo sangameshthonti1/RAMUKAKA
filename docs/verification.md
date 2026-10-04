@@ -1,5 +1,14 @@
 # Verification record
 
+## Live-agent integration validation — 2026-10-04
+
+- Backend: **223 tests passed**; frontend: **56 tests passed**; frontend lint and production build passed.
+- Gemini 3.8 Flash request construction, structured response validation, server action allowlisting,
+  exact in-app message persistence, truthful LIVE_API labeling and secret/redaction behavior passed
+  against an in-memory fake HTTP transport. No paid Gemini request was made during automated tests.
+- Invalid model output records a failed call and creates no decision or notification. Existing
+  approval, evidence and two-sided closure services remain authoritative.
+
 ## Latest service-schedule validation — 2026-10-04
 
 - Backend: **212 tests passed** (42 new schedule/reminder tests), with one existing Starlette/httpx warning.

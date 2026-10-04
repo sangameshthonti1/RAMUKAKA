@@ -167,6 +167,46 @@ export function installMockApi() {
           };
           return json(state.simulation);
         }
+        if (path === "/api/agent/RK-2048/decide") {
+          const decision: Decision = {
+            id: "D-GEMINI",
+            case_id: "RK-2048",
+            action: "request_household_approval",
+            reason: "The current quote still needs consent.",
+            rule: "APPROVAL_REQUIRED",
+            truth_label: "LIVE_API",
+            created_at: timestamp,
+          };
+          return json(
+            {
+              case_id: "RK-2048",
+              model: "gemini-3.8-flash",
+              status: "live_succeeded",
+              decision,
+              notification: {
+                id: "N-GEMINI",
+                case_id: "RK-2048",
+                channel: "in_app:household",
+                message: "Please approve or reject the ₹749 quote.",
+                truth_label: "LIVE_API",
+                status: "displayed",
+                created_at: timestamp,
+              },
+              connector_call: {
+                id: "C-GEMINI",
+                case_id: "RK-2048",
+                connector: "Gemini",
+                operation: "decide_next_action",
+                request: {},
+                response: {},
+                truth_label: "LIVE_API",
+                status: "live_succeeded",
+                created_at: timestamp,
+              },
+            },
+            201,
+          );
+        }
         if (path === "/api/cases") {
           const item = {
             ...structuredClone(caseFixture),
@@ -312,6 +352,12 @@ export function installMockApi() {
             blocker: null,
           },
         ],
+        "/api/agent/contract": {
+          provider: "gemini",
+          model: "gemini-3.8-flash",
+          ready: true,
+          blocker: null,
+        },
         "/api/system-prompt": {
           prompt:
             "Backend-owned instructions: preserve the human approval boundary.",

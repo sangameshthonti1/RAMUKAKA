@@ -13,6 +13,7 @@ export const keys = {
   notifications: ["notifications"],
   rails: ["rails"],
   partnerContracts: ["partner-rail-contracts"],
+  agentContract: ["agent-contract"],
   prompt: ["system-prompt"],
   simulation: ["simulation"],
 } as const;
