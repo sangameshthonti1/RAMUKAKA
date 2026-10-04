@@ -11,7 +11,7 @@ describe("portal and project views", () => {
     ["/customer/chat", "Service chat"],
     ["/customer/cases", "Your cases"],
     ["/provider", "Provider Desk"],
-    ["/project/demo", "One case. One clear next step."],
+    ["/project/demo", "One repair. One clear next step."],
     ["/project/cases", "Case Room"],
     ["/project/simulation", "The simulation lab"],
     ["/project/evidence", "Evidence Ledger"],
@@ -50,12 +50,15 @@ describe("portal and project views", () => {
       }),
     ).toBeVisible();
     await user.click(
-      screen.getByRole("button", { name: "Run live agent decision" }),
+      screen.getByRole("button", { name: "Ask RamuKaka" }),
     );
     expect(
       await screen.findByText("Please approve or reject the ₹749 quote."),
     ).toBeVisible();
     expect(screen.getByText("Live API · reported by server")).toBeVisible();
+    expect(
+      screen.getByText(/Nothing can be paid or assigned before the customer approves/),
+    ).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Approve ₹749" }));
     expect(
       await screen.findByRole("heading", {

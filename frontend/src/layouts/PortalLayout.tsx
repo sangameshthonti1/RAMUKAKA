@@ -36,7 +36,7 @@ export default function PortalLayout({ portal }: { portal: Portal }) {
         <div className="workspace-label"><span className="workspace-dot" />{portal === "customer" ? "CUSTOMER" : "PROVIDER"} PORTAL</div>
         <nav aria-label={`${portal} navigation`}>
           <div className="nav-group"><p>GUIDED EXPERIENCE</p>
-            <NavLink to="/project/demo" className="nav-link">Live Demo</NavLink>
+            <NavLink to="/project/demo" className="nav-link">Step-by-step Demo</NavLink>
           </div>
           <div className="nav-group"><p>YOUR WORKSPACE</p>
             {links[portal].map((item) => (

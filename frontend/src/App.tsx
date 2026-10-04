@@ -27,13 +27,13 @@ function PortalChoice() {
       />
       <div className="detail-grid">
         <div className="panel p-6 space-y-4">
-          <h2>See the complete story</h2>
+          <h2>See one repair from start to finish</h2>
           <p>
-            Follow one repair from approval to evidence-backed, two-sided
-            closure. The page always shows the single next action.
+            Follow one repair through price approval, the provider's work and
+            final checks by both sides. You will always see the next action.
           </p>
           <Link className="btn btn-primary" to="/project/demo">
-            Start guided demo
+            Start step-by-step demo
           </Link>
         </div>
         <div className="panel p-6 space-y-4">

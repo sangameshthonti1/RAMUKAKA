@@ -17,18 +17,18 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { DEMO_ROLES, getDemoRole, setDemoRole } from "../store/demo";
 import type { DemoRole } from "../store/demo";
 const mainLinks = [
-  { to: "/project/demo", label: "Live Demo", icon: LayoutDashboard },
-  { to: "/customer/cases/RK-2048", label: "Household View", icon: House },
+  { to: "/project/demo", label: "Step-by-step Demo", icon: LayoutDashboard },
+  { to: "/customer/cases/RK-2048", label: "Customer View", icon: House },
   {
     to: "/provider/cases/provider-kent-care/RK-2048",
-    label: "Provider View",
+    label: "Service Provider View",
     icon: Wrench,
   },
 ];
 const labLinks = [
-  { to: "/project/evidence", label: "Proof Ledger", icon: BookOpen },
-  { to: "/project/rails", label: "API Evidence", icon: Network },
-  { to: "/project/system-prompt", label: "Agent Rules", icon: Sparkles },
+  { to: "/project/evidence", label: "Proof & History", icon: BookOpen },
+  { to: "/project/rails", label: "Connected Services", icon: Network },
+  { to: "/project/system-prompt", label: "How RamuKaka Decides", icon: Sparkles },
 ];
 const ideaLinks = [
   { to: "/project/business-plan", label: "Business Plan", icon: CircleHelp },
@@ -48,9 +48,9 @@ export default function ConsoleLayout() {
       (link) => link.to === location.pathname,
     )?.label ??
     (location.pathname.startsWith("/customer/")
-      ? "Household View"
+      ? "Customer View"
       : location.pathname.startsWith("/provider/")
-        ? "Provider View"
+        ? "Service Provider View"
         : location.pathname.startsWith("/cases/")
           ? "Case Room"
           : location.pathname === "/project/landing"
@@ -145,7 +145,7 @@ export default function ConsoleLayout() {
           </div>
           {location.pathname === "/project/demo" ? (
             <span className="small muted">
-              Roles switch automatically in this guided demo
+              Customer and provider roles switch automatically here
             </span>
           ) : (
             <div className="role-control">
