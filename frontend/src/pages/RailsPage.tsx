@@ -1,5 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Network, ShieldCheck, Unplug } from "lucide-react";
+import { Mic, Network, ShieldCheck, Square, Trash2, Unplug } from "lucide-react";
 import { api } from "../services/api";
 import { keys, useApiMutation } from "../hooks/useApi";
 import {
@@ -15,6 +16,93 @@ import {
 import { SelectField, TextAreaField, TextField } from "../components/WorkspaceFields";
 import { formText } from "../utils/forms";
 export default function RailsPage() {
+  const [recording, setRecording] = useState(false);
+  const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
+  const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
+  const [microphoneError, setMicrophoneError] = useState<string | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  useEffect(() => {
+    return () => {
+      if (recordingUrl) URL.revokeObjectURL(recordingUrl);
+    };
+  }, [recordingUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
+
+  const startRecording = async () => {
+    setMicrophoneError(null);
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setMicrophoneError("This browser does not support microphone recording. Use file upload instead.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      chunksRef.current = [];
+      const preferredType = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/ogg;codecs=opus",
+        "audio/mp4",
+      ].find((type) => MediaRecorder.isTypeSupported(type));
+      const recorder = new MediaRecorder(
+        stream,
+        preferredType ? { mimeType: preferredType } : undefined,
+      );
+      recorderRef.current = recorder;
+      recorder.ondataavailable = (event) => {
+        if (event.data.size) chunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        const mimeType = recorder.mimeType || chunksRef.current[0]?.type || "audio/webm";
+        const extension = mimeType.includes("ogg")
+          ? "ogg"
+          : mimeType.includes("mp4")
+            ? "m4a"
+            : "webm";
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        if (blob.size) {
+          const file = new File([blob], `ramukaka-voice-${Date.now()}.${extension}`, {
+            type: mimeType,
+          });
+          setRecordedAudio(file);
+          setRecordingUrl(URL.createObjectURL(blob));
+        }
+        stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        setRecording(false);
+      };
+      recorder.start();
+      setRecording(true);
+    } catch (error) {
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      setMicrophoneError(
+        error instanceof DOMException && error.name === "NotAllowedError"
+          ? "Microphone permission was denied. Allow it in the browser or upload a voice note."
+          : "The microphone could not start. Check the selected input device or upload a voice note.",
+      );
+    }
+  };
+
+  const stopRecording = () => {
+    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+  };
+
+  const clearRecording = () => {
+    setRecordedAudio(null);
+    setRecordingUrl(null);
+    setMicrophoneError(null);
+  };
+
   const query = useQuery({ queryKey: keys.rails, queryFn: api.rails });
   const contracts = useQuery({
     queryKey: keys.partnerContracts,
@@ -135,15 +223,50 @@ export default function RailsPage() {
             onSubmit={(event) => {
               event.preventDefault();
               const data = new FormData(event.currentTarget);
-              const audio = data.get("audio");
+              const uploadedAudio = data.get("audio");
+              const audio = recordedAudio ?? uploadedAudio;
               if (audio instanceof File && audio.size)
                 gnani.mutate({
                   audio,
                   language: formText(data, "language_code"),
                 });
+              else setMicrophoneError("Record a voice note or choose an audio file first.");
             }}
           >
-            <TextField label="Voice note" name="audio" type="file" accept="audio/*" required />
+            <div>
+              <span className="field-label">Record a voice note now</span>
+              <div className="button-row mt-3">
+                {!recording ? (
+                  <button className="btn btn-secondary" type="button" onClick={() => void startRecording()}>
+                    <Mic size={16} /> Record with microphone
+                  </button>
+                ) : (
+                  <button className="btn btn-approval" type="button" onClick={stopRecording}>
+                    <Square size={15} /> Stop recording
+                  </button>
+                )}
+                {recordedAudio && !recording && (
+                  <button className="btn btn-secondary" type="button" onClick={clearRecording}>
+                    <Trash2 size={15} /> Discard recording
+                  </button>
+                )}
+              </div>
+              {recording && <p className="form-note mt-3">Recording… speak naturally, then press Stop recording.</p>}
+              {recordingUrl && (
+                <div className="voice-preview mt-3">
+                  <audio controls src={recordingUrl} aria-label="Recorded voice note preview" />
+                  <p className="form-note">Recorded locally. Review it, then send it to Gnani below.</p>
+                </div>
+              )}
+              {microphoneError && <p className="error-text mt-3" role="alert">{microphoneError}</p>}
+            </div>
+            <TextField
+              label="Or upload an existing voice note"
+              name="audio"
+              type="file"
+              accept="audio/*"
+              onChange={() => clearRecording()}
+            />
             <SelectField label="Language" name="language_code" defaultValue="hi-IN">
               <option value="hi-IN">Hindi</option>
               <option value="en-IN">Indian English</option>
@@ -153,11 +276,12 @@ export default function RailsPage() {
               <option value="mr-IN">Marathi</option>
             </SelectField>
             <p className="form-note">
-              The backend sends the audio to Gnani and logs its SHA-256 plus the exact raw response.
-              Audio bytes and the API key are never written to the ledger.
+              Microphone audio remains in the browser until you press Send. The backend then sends
+              it to Gnani and logs its SHA-256 plus the exact raw response. Audio bytes and the API
+              key are never written to the ledger.
             </p>
-            <button className="btn btn-primary" disabled={gnani.isPending}>
-              {gnani.isPending ? "Calling Gnani…" : "Transcribe through Gnani"}
+            <button className="btn btn-primary" disabled={gnani.isPending || recording}>
+              {gnani.isPending ? "Calling Gnani…" : "Send voice note to Gnani"}
             </button>
             <MutationFeedback mutation={gnani} success="Gnani response recorded in the connector ledger." />
           </form>

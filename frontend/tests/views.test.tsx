@@ -195,6 +195,22 @@ describe("portal and project views", () => {
       "Backend-owned instructions: preserve the human approval boundary.",
     );
   });
+  it("offers direct microphone capture with an upload fallback", async () => {
+    installMockApi();
+    renderApp("/project/rails");
+    const user = userEvent.setup();
+    const record = await screen.findByRole("button", {
+      name: "Record with microphone",
+    });
+    expect(screen.getByLabelText("Or upload an existing voice note")).toHaveAttribute(
+      "accept",
+      "audio/*",
+    );
+    await user.click(record);
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /does not support microphone recording/i,
+    );
+  });
   it("switches ledger sections and exposes request and response payloads", async () => {
     installMockApi();
     renderApp("/project/evidence?case=RK-2048");
