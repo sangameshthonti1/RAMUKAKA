@@ -1235,6 +1235,182 @@
     left: 0;
     color: #47735d;
   }
+  .guided-overview {
+    background: #183d43;
+    color: #f5f3e9;
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .guided-case-heading,
+  .guided-action-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .guided-case-heading h2 {
+    margin: 7px 0 5px;
+    font-size: 23px;
+  }
+  .guided-case-heading > div > p:last-child {
+    color: #c8d6cb;
+  }
+  .guided-steps {
+    list-style: none;
+    padding: 0;
+    margin: 25px 0 0;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .guided-steps li {
+    border-top: 2px solid #557076;
+    padding-top: 10px;
+    color: #9eb0a9;
+    min-width: 0;
+  }
+  .guided-steps li span {
+    display: block;
+    height: 22px;
+  }
+  .guided-steps li small {
+    display: block;
+    font-size: 9px;
+    line-height: 1.35;
+  }
+  .guided-steps li.done {
+    border-color: #8fbd95;
+    color: #bfe0bd;
+  }
+  .guided-steps li.current {
+    border-color: #e1a46b;
+    color: #ffd5a6;
+  }
+  .guided-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(270px, 0.7fr);
+    gap: 24px;
+    align-items: start;
+  }
+  .guided-primary {
+    padding: 30px;
+  }
+  .guided-action-heading h2 {
+    font-size: 24px;
+    margin: 7px 0 8px;
+  }
+  .guided-action-heading > div > p:last-child {
+    color: #60746d;
+    max-width: 680px;
+  }
+  .actor-pill {
+    border: 1px solid #d7ddd3;
+    border-radius: 99px;
+    padding: 6px 10px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .actor-pill.household {
+    color: #8a5a27;
+    background: #fff3df;
+    border-color: #ead2ae;
+  }
+  .actor-pill.provider {
+    color: #35634f;
+    background: #eaf3e7;
+    border-color: #c7d9c3;
+  }
+  .actor-pill.system {
+    color: #355c67;
+    background: #e7f0f1;
+    border-color: #c6d8da;
+  }
+  .agent-checkpoint {
+    margin-top: 25px;
+    padding: 20px;
+    border: 1px solid #cfdcd3;
+    background: #f1f5ed;
+    border-radius: 11px;
+    display: grid;
+    gap: 16px;
+  }
+  .agent-checkpoint .large-icon {
+    color: #356557;
+    background: #e4ede1;
+    border-color: #cfddca;
+    padding: 10px;
+  }
+  .agent-checkpoint > .btn {
+    width: 100%;
+  }
+  .agent-result {
+    background: #fffefa;
+    border: 1px solid #dce3d8;
+    border-radius: 9px;
+    padding: 16px;
+  }
+  .agent-result p {
+    margin: 10px 0 7px;
+  }
+  .agent-result small {
+    color: #63766e;
+  }
+  .guided-human-action {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e5dc;
+  }
+  .guided-human-action > p {
+    margin: 7px 0 15px;
+    color: #65766f;
+  }
+  .guided-complete {
+    margin-top: 25px;
+    padding: 25px;
+    border-radius: 12px;
+    background: #e7f2e5;
+    border: 1px solid #c4d9c0;
+    display: flex;
+    gap: 17px;
+    align-items: flex-start;
+  }
+  .guided-complete > span {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #397159;
+    color: white;
+  }
+  .guided-complete h2 {
+    margin: 5px 0 8px;
+  }
+  .guided-facts {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 12px;
+  }
+  .guided-facts li {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #5d7168;
+    font-size: 11px;
+  }
+  .guided-facts svg {
+    color: #397159;
+  }
+  .button-stack {
+    display: grid;
+    justify-items: start;
+    gap: 10px;
+  }
   .checkbox-row {
     display: flex;
     align-items: flex-start;
@@ -1634,7 +1810,8 @@
 }
 @media (max-width: 980px) {
   .dashboard-grid,
-  .detail-grid {
+  .detail-grid,
+  .guided-layout {
     grid-template-columns: minmax(0, 1fr);
   }
   .dashboard-grid > div:nth-child(2) {
@@ -1665,6 +1842,9 @@
   }
   .stat-card {
     flex-direction: column;
+  }
+  .guided-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .home-hero {
     padding: 25px;
@@ -1990,6 +2170,17 @@
   .system-prompt {
     padding: 18px;
     font-size: 11px;
+  }
+  .guided-overview,
+  .guided-primary {
+    padding: 20px;
+  }
+  .guided-case-heading,
+  .guided-action-heading {
+    flex-direction: column;
+  }
+  .guided-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (prefers-reduced-motion: reduce) {

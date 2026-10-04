@@ -120,7 +120,7 @@ The SQLite snapshot is verified and written under `backend/data/backups/` (ignor
 
 ## Tests and build
 
-In this workspace: **223 backend tests** and **56 frontend tests** passed; frontend lint and build also passed. Re-run with:
+In this workspace: **223 backend tests** and **58 frontend tests** passed; frontend lint and build also passed. Re-run with:
 
 ```sh
 # From backend/
@@ -147,12 +147,15 @@ The smoke script starts bounded subprocesses, uses an isolated temporary databas
 
 ## Run the Round 3 demonstration
 
-1. From `/`, choose a portal. For the scripted demo, visit `/project/simulation`. Acknowledge and reset RK-2048 if needed.
-2. Open `/project/cases/RK-2048`: Sangamesh's Kent water purifier has low water flow, a filter-replacement quote of **₹749**, and status **Waiting for approval**.
-3. Click **Try mock payment** before approving: the backend denies it and records the rule.
-4. Return to Simulation. Click **Run one step** six times: approval → assignment/mock payment → service evidence → provider confirmation → household confirmation → closure.
-5. Open `/project/rails`: send the real voice note through Gnani, then record the exact Pine Labs and Delhivery documentation responses shown by the wizard. Inspect the full request/response ledger and truth labels.
-6. To demonstrate manual closure, reset, advance three steps, then use the Provider confirmation in `/provider` and Household confirmation in `/customer/cases/RK-2048` with matching demo attribution. Only the second confirmation closes the case. An unresolved report reopens it. For a new case without simulation, follow the [working model guide](docs/working-model.md).
+1. Open `/project/demo`. This is the primary jury and recording route.
+2. At every checkpoint, click **Run live agent decision**, then complete the single action shown directly beneath it.
+3. The same page advances through household approval, mock assignment, service evidence, provider confirmation, household confirmation and guarded closure. Demo attribution changes automatically.
+4. Open `/project/rails` only to demonstrate Gnani and the documented Pine Labs/Delhivery responses.
+5. Open `/project/evidence?case=RK-2048` to show the resulting decisions, evidence, connector calls and exact messages.
+
+The older `/project/simulation` route remains available for deterministic
+rehearsal, but it is no longer the main user journey. For a new case without
+simulation, follow the [working model guide](docs/working-model.md).
 
 A rejected quote blocks advancement; the simulator never silently reverses a rejection. All scripted approvals and confirmations are documentary fixtures, not actual people authorizing real transactions. See [simulation guide](docs/simulation-guide.md).
 

@@ -1,5 +1,12 @@
 # Verification record
 
+## Guided Round 3 flow — 2026-10-04
+
+- `/project/demo` derives the current checkpoint from the authoritative case record and presents only one next action.
+- Live Gemini output, exact in-app message and the required household/provider input remain on the same page.
+- Demo attribution switches automatically for guided actions; detailed household, provider, API and proof views remain optional.
+- Frontend: **58 tests passed**, including the guided live-agent-to-approval transition; ESLint and the TypeScript/Vite production build passed.
+
 ## Live-agent integration validation — 2026-10-04
 
 - Backend: **223 tests passed**; frontend: **56 tests passed**; frontend lint and production build passed.

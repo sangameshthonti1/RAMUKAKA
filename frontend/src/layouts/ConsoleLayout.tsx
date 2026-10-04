@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import {
-  Activity,
   ArrowUpRight,
   BookOpen,
   CircleHelp,
-  FlaskConical,
   Home,
   House,
   LayoutDashboard,
@@ -19,20 +17,22 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { DEMO_ROLES, getDemoRole, setDemoRole } from "../store/demo";
 import type { DemoRole } from "../store/demo";
 const mainLinks = [
-  { to: "/", label: "Home", icon: LayoutDashboard },
-  { to: "/cases", label: "Case Room", icon: Activity },
-  { to: "/my-home", label: "My Home", icon: House },
-  { to: "/providers", label: "Provider Desk", icon: Wrench },
+  { to: "/project/demo", label: "Live Demo", icon: LayoutDashboard },
+  { to: "/customer/cases/RK-2048", label: "Household View", icon: House },
+  {
+    to: "/provider/cases/provider-kent-care/RK-2048",
+    label: "Provider View",
+    icon: Wrench,
+  },
 ];
 const labLinks = [
-  { to: "/simulation", label: "Simulation", icon: FlaskConical },
-  { to: "/evidence", label: "Evidence Ledger", icon: BookOpen },
-  { to: "/rails", label: "Rails & APIs", icon: Network },
-  { to: "/system-prompt", label: "System Prompt", icon: Sparkles },
+  { to: "/project/evidence", label: "Proof Ledger", icon: BookOpen },
+  { to: "/project/rails", label: "API Evidence", icon: Network },
+  { to: "/project/system-prompt", label: "Agent Rules", icon: Sparkles },
 ];
 const ideaLinks = [
-  { to: "/business-plan", label: "Business Plan", icon: CircleHelp },
-  { to: "/risks", label: "Risks & Safeguards", icon: ShieldCheck },
+  { to: "/project/business-plan", label: "Business Plan", icon: CircleHelp },
+  { to: "/project/risks", label: "Risks & Safeguards", icon: ShieldCheck },
 ];
 export default function ConsoleLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -47,11 +47,15 @@ export default function ConsoleLayout() {
     [...mainLinks, ...labLinks, ...ideaLinks].find(
       (link) => link.to === location.pathname,
     )?.label ??
-    (location.pathname.startsWith("/cases/")
-      ? "Case Room"
-      : location.pathname === "/landing"
-        ? "Public Landing"
-        : "Console");
+    (location.pathname.startsWith("/customer/")
+      ? "Household View"
+      : location.pathname.startsWith("/provider/")
+        ? "Provider View"
+        : location.pathname.startsWith("/cases/")
+          ? "Case Room"
+          : location.pathname === "/project/landing"
+            ? "Public Landing"
+            : "Console");
   useEffect(() => {
     document.title = `${current} · RamuKaka`;
   }, [current]);
@@ -113,7 +117,7 @@ export default function ConsoleLayout() {
               </p>
             </div>
           </div>
-          <NavLink to="/landing" className="nav-link">
+          <NavLink to="/project/landing" className="nav-link">
             Public Landing
             <ArrowUpRight size={17} />
           </NavLink>
@@ -139,30 +143,36 @@ export default function ConsoleLayout() {
               <strong>{current}</strong>
             </span>
           </div>
-          <div className="role-control">
-            <label htmlFor="demo-role">
-              Demo attribution <small>not authentication</small>
-            </label>
-            <select
-              id="demo-role"
-              aria-label="Demo attribution — not authentication"
-              value={role}
-              onChange={(event) => {
-                const next = event.target.value as DemoRole;
-                setRole(next);
-                setDemoRole(next);
-              }}
-            >
-              {DEMO_ROLES.map((value) => (
-                <option value={value} key={value}>
-                  {value.charAt(0).toUpperCase() + value.slice(1)}
-                </option>
-              ))}
-            </select>
-            <span className="avatar" aria-hidden="true">
-              RK
+          {location.pathname === "/project/demo" ? (
+            <span className="small muted">
+              Roles switch automatically in this guided demo
             </span>
-          </div>
+          ) : (
+            <div className="role-control">
+              <label htmlFor="demo-role">
+                Demo attribution <small>not authentication</small>
+              </label>
+              <select
+                id="demo-role"
+                aria-label="Demo attribution — not authentication"
+                value={role}
+                onChange={(event) => {
+                  const next = event.target.value as DemoRole;
+                  setRole(next);
+                  setDemoRole(next);
+                }}
+              >
+                {DEMO_ROLES.map((value) => (
+                  <option value={value} key={value}>
+                    {value.charAt(0).toUpperCase() + value.slice(1)}
+                  </option>
+                ))}
+              </select>
+              <span className="avatar" aria-hidden="true">
+                RK
+              </span>
+            </div>
+          )}
         </header>
         <div className="demo-banner">
           <span className="demo-chip">MOCK / DEMO</span>
@@ -170,7 +180,7 @@ export default function ConsoleLayout() {
             Local records. Simulated connectors.{" "}
             <strong>No real payments, bookings or outbound messages.</strong>
           </p>
-          <Link to="/rails">
+          <Link to="/project/rails">
             See boundaries <ArrowUpRight size={14} />
           </Link>
         </div>
@@ -181,7 +191,7 @@ export default function ConsoleLayout() {
           <span>
             RamuKaka · Household operations, with a human in the loop.
           </span>
-          <Link to="/risks">
+          <Link to="/project/risks">
             Trust is a process, not a promise <ArrowUpRight size={13} />
           </Link>
         </footer>

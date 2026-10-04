@@ -11,6 +11,7 @@ describe("portal and project views", () => {
     ["/customer/chat", "Service chat"],
     ["/customer/cases", "Your cases"],
     ["/provider", "Provider Desk"],
+    ["/project/demo", "One case. One clear next step."],
     ["/project/cases", "Case Room"],
     ["/project/simulation", "The simulation lab"],
     ["/project/evidence", "Evidence Ledger"],
@@ -38,6 +39,29 @@ describe("portal and project views", () => {
         String(url).startsWith("/api/"),
       ),
     ).toBe(true);
+  });
+  it("keeps the live agent and next human action on one guided page", async () => {
+    installMockApi();
+    const user = userEvent.setup();
+    renderApp("/project/demo");
+    expect(
+      await screen.findByRole("heading", {
+        name: "Approve the ₹749 service",
+      }),
+    ).toBeVisible();
+    await user.click(
+      screen.getByRole("button", { name: "Run live agent decision" }),
+    );
+    expect(
+      await screen.findByText("Please approve or reject the ₹749 quote."),
+    ).toBeVisible();
+    expect(screen.getByText("Live API · reported by server")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Approve ₹749" }));
+    expect(
+      await screen.findByRole("heading", {
+        name: "Assign the approved provider",
+      }),
+    ).toBeVisible();
   });
   it("keeps role-specific navigation within each portal", async () => {
     installMockApi();
