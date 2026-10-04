@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Mic, Network, ShieldCheck, Square, Trash2, Unplug } from "lucide-react";
 import { api } from "../services/api";
-import { keys, useApiMutation } from "../hooks/useApi";
+import { keys, useApiMutation, useCases } from "../hooks/useApi";
 import {
   EmptyState,
   PageHeading,
@@ -15,9 +15,14 @@ import {
 } from "../components/ui";
 import { SelectField, TextAreaField, TextField } from "../components/WorkspaceFields";
 import { formText } from "../utils/forms";
+import { gnaniTranscript } from "../utils/gnani";
 export default function RailsPage() {
+  const cases = useCases();
+  const [caseId, setCaseId] = useState("");
   const [recording, setRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
+  const [uploadedAudio, setUploadedAudio] = useState<File | null>(null);
+  const [languageCode, setLanguageCode] = useState("hi-IN");
   const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
   const [microphoneError, setMicrophoneError] = useState<string | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -47,6 +52,7 @@ export default function RailsPage() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       chunksRef.current = [];
+      setUploadedAudio(null);
       const preferredType = [
         "audio/ogg;codecs=opus",
         "audio/ogg",
@@ -112,13 +118,18 @@ export default function RailsPage() {
     queryKey: keys.partnerContracts,
     queryFn: api.partnerContracts,
   });
+  const selectedCase = cases.data?.find((item) => item.id === caseId);
   const gnani = useApiMutation(
     ({ audio, language }: { audio: File; language: string }) =>
-      api.transcribeGnani("RK-2048", audio, language),
+      api.transcribeGnani(caseId, audio, language),
+  );
+  const transcript = gnaniTranscript(gnani.data);
+  const attachTranscript = useApiMutation((detail: string) =>
+    api.event(caseId, { type: "customer_note", detail }),
   );
   const pine = useApiMutation(
     (data: FormData) =>
-      api.recordDocumentedResponse("RK-2048", {
+      api.recordDocumentedResponse(caseId, {
         connector: "Pine Labs",
         operation: "create_payment_link",
         endpoint: formText(data, "endpoint"),
@@ -129,7 +140,7 @@ export default function RailsPage() {
   );
   const delhivery = useApiMutation(
     (data: FormData) =>
-      api.recordDocumentedResponse("RK-2048", {
+      api.recordDocumentedResponse(caseId, {
         connector: "Delhivery",
         operation: formText(data, "operation") as
           | "create_part_shipment"
@@ -220,20 +231,52 @@ export default function RailsPage() {
           </div>
         </Panel>
       </QueryState>
+      <QueryState
+        pending={cases.isPending}
+        error={cases.error}
+        retry={() => void cases.refetch()}
+      >
+        <Panel title="Choose the case for this run" className="mt-6">
+          <div className="form-stack">
+            <SelectField
+              label="Target case and appliance"
+              name="case_id"
+              value={caseId}
+              onChange={(event) => {
+                setCaseId(event.target.value);
+                gnani.reset();
+                attachTranscript.reset();
+              }}
+            >
+              <option value="">Select a case before calling a partner</option>
+              {cases.data?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.id} · {item.title} · {item.complaint}
+                </option>
+              ))}
+            </SelectField>
+            {selectedCase && (
+              <div className="disclosure">
+                <strong>{selectedCase.title}</strong>
+                <p className="small muted mt-2">Customer report: {selectedCase.complaint}</p>
+                <p className="small muted">Current state: {selectedCase.status}</p>
+              </div>
+            )}
+            <p className="form-note">
+              Every Gnani, Pine Labs and Delhivery record below is attached to this visible case.
+              This prevents a voice note for one appliance being silently written to another.
+            </p>
+          </div>
+        </Panel>
+      </QueryState>
       <div className="detail-grid mt-6">
         <Panel title="1. Run Gnani STT live" kicker="REAL PARTNER CALL">
           <form
             className="form-stack"
             onSubmit={(event) => {
               event.preventDefault();
-              const data = new FormData(event.currentTarget);
-              const uploadedAudio = data.get("audio");
               const audio = recordedAudio ?? uploadedAudio;
-              if (audio instanceof File && audio.size)
-                gnani.mutate({
-                  audio,
-                  language: formText(data, "language_code"),
-                });
+              if (audio?.size) gnani.mutate({ audio, language: languageCode });
               else setMicrophoneError("Record a voice note or choose an audio file first.");
             }}
           >
@@ -269,9 +312,17 @@ export default function RailsPage() {
               name="audio"
               type="file"
               accept=".aac,.mp3,.m4a,.ogg,.wav,.flac,audio/aac,audio/mpeg,audio/mp4,audio/ogg,audio/wav,audio/flac"
-              onChange={() => clearRecording()}
+              onChange={(event) => {
+                clearRecording();
+                setUploadedAudio(event.target.files?.[0] ?? null);
+              }}
             />
-            <SelectField label="Language" name="language_code" defaultValue="hi-IN">
+            <SelectField
+              label="Language"
+              name="language_code"
+              value={languageCode}
+              onChange={(event) => setLanguageCode(event.target.value)}
+            >
               <option value="hi-IN">Hindi</option>
               <option value="en-IN">Indian English</option>
               <option value="kn-IN">Kannada</option>
@@ -284,7 +335,7 @@ export default function RailsPage() {
               it to Gnani and logs its SHA-256 plus the exact raw response. Audio bytes and the API
               key are never written to the ledger.
             </p>
-            <button className="btn btn-primary" disabled={gnani.isPending || recording}>
+            <button className="btn btn-primary" disabled={gnani.isPending || recording || !caseId}>
               {gnani.isPending ? "Calling Gnani…" : "Send voice note to Gnani"}
             </button>
             {gnani.isSuccess && gnani.data.status !== "live_succeeded" ? (
@@ -298,6 +349,37 @@ export default function RailsPage() {
                 success="Gnani transcription succeeded and was recorded in the connector ledger."
               />
             )}
+            {gnani.isSuccess && gnani.data.status === "live_succeeded" && !transcript && (
+              <p className="error-text" role="alert">
+                Gnani succeeded, but no transcript field could be found in its response. The exact
+                response remains available in the connector ledger and nothing was added to the case.
+              </p>
+            )}
+            {transcript && (
+              <div className="disclosure">
+                <span className="tiny-label">GNANI TRANSCRIPT — REVIEW BEFORE ATTACHING</span>
+                <p className="mt-3" lang="hi">{transcript}</p>
+                <p className="form-note mt-3">
+                  This is external speech-to-text output, not proof of service, approval or completion.
+                </p>
+                <button
+                  className="btn btn-approval mt-3"
+                  type="button"
+                  disabled={attachTranscript.isPending || attachTranscript.isSuccess}
+                  onClick={() => attachTranscript.mutate(transcript)}
+                >
+                  {attachTranscript.isPending
+                    ? "Attaching transcript…"
+                    : attachTranscript.isSuccess
+                      ? "Transcript attached"
+                      : `Confirm and attach to ${caseId}`}
+                </button>
+              </div>
+            )}
+            <MutationFeedback
+              mutation={attachTranscript}
+              success="Transcript added as real human input. The agent recorded its context-only decision and did not treat it as evidence or approval."
+            />
           </form>
         </Panel>
         <Panel title="2. Record Pine Labs response" kicker="DOCUMENTATION SIMULATION">
@@ -312,7 +394,7 @@ export default function RailsPage() {
             <TextField label="Official documentation" name="documentation_url" readOnly defaultValue="https://www.pinelabs.com/docs/online-payments/api/payment-links/create-payment-link" />
             <TextAreaField label="Request JSON" name="request" required rows={7} defaultValue={'{\n  "amount": {"value": 74900, "currency": "INR"},\n  "description": "RK-2048 filter replacement",\n  "merchant_payment_link_reference": "RK-2048"\n}'} />
             <TextAreaField label="Exact documented response JSON" name="response" required rows={7} defaultValue={'{\n  "payment_link": "https://shortener.v2.pinepg.in/PLUTUS/documentary",\n  "payment_link_id": "pl-documentary-RK-2048",\n  "status": "CREATED",\n  "amount": {"value": 74900, "currency": "INR"}\n}'} />
-            <button className="btn btn-primary" disabled={pine.isPending}>Record Pine Labs response</button>
+            <button className="btn btn-primary" disabled={pine.isPending || !caseId}>Record Pine Labs response</button>
             <MutationFeedback mutation={pine} success="Exact Pine Labs documentation response recorded." />
           </form>
         </Panel>
@@ -334,7 +416,7 @@ export default function RailsPage() {
           <TextAreaField label="Exact request JSON" name="request" required rows={6} placeholder="Paste the request matching the documentation" />
           <TextAreaField label="Exact documented response JSON" name="response" required rows={6} placeholder="Paste exactly what the documentation says Delhivery returns" />
           <p className="form-note">The backend rejects non-Delhivery domains and does not claim that a real shipment was created.</p>
-          <button className="btn btn-primary" disabled={delhivery.isPending}>Record Delhivery response</button>
+          <button className="btn btn-primary" disabled={delhivery.isPending || !caseId}>Record Delhivery response</button>
           <MutationFeedback mutation={delhivery} success="Exact Delhivery documentation response recorded." />
         </form>
       </Panel>

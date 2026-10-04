@@ -6,6 +6,56 @@ import { renderApp } from "./render";
 import { installPortalMockApi } from "./portalMocks";
 import { keys } from "../src/hooks/useApi";
 describe("human decisions and server guard feedback", () => {
+  it("attaches a reviewed live transcript only to the explicitly selected case", async () => {
+    const mock = installMockApi();
+    const original = mock.fetchMock.getMockImplementation()!;
+    mock.fetchMock.mockImplementation(async (input, init) => {
+      if (
+        String(input) === "/api/partner-rails/RK-2048/gnani/transcribe" &&
+        init?.method === "POST"
+      ) {
+        expect(init.body).toBeInstanceOf(FormData);
+        return json({
+          id: "GNANI-1",
+          case_id: "RK-2048",
+          connector: "Gnani",
+          operation: "transcribe_audio",
+          request: {},
+          response: {
+            parsed_response: { transcript: "मेरा टीवी खराब हो गया है" },
+          },
+          truth_label: "LIVE_API",
+          status: "live_succeeded",
+          created_at: "2026-10-04T09:44:06Z",
+        });
+      }
+      return original(input, init);
+    });
+    renderApp("/project/rails");
+    const user = userEvent.setup();
+    await user.selectOptions(
+      await screen.findByLabelText("Target case and appliance"),
+      "RK-2048",
+    );
+    const audio = new File(["voice"], "voice.ogg", { type: "audio/ogg" });
+    const fileInput = screen.getByLabelText("Or upload an existing voice note");
+    await user.upload(fileInput, audio);
+    expect((fileInput as HTMLInputElement).files?.[0]).toBe(audio);
+    const send = screen.getByRole("button", { name: "Send voice note to Gnani" });
+    expect(send).toBeEnabled();
+    await user.click(send);
+    expect(await screen.findByText("मेरा टीवी खराब हो गया है")).toBeInTheDocument();
+    expect(mock.posts).toHaveLength(0);
+    await user.click(
+      screen.getByRole("button", { name: "Confirm and attach to RK-2048" }),
+    );
+    await screen.findByText(/Transcript added as real human input/);
+    expect(mock.posts[0]).toMatchObject({
+      path: "/api/cases/RK-2048/events",
+      body: { type: "customer_note", detail: "मेरा टीवी खराब हो गया है" },
+    });
+  });
+
   it.each(["approved", "rejected"] as const)(
     "submits a scoped ₹749 %s decision and globally invalidates caches",
     async (decision) => {
