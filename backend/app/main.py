@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError, OperationalError
 
 from app.api.chat import router as chat_router
 from app.api.coordination import router as coordination_router
+from app.api.partner_rails import router as partner_rails_router
 from app.api.routes import router
 from app.api.schedules import router as schedules_router
 from app.api.workspace import router as workspace_router
@@ -71,6 +72,7 @@ def create_app(settings: Settings | None = None, *, engine: Engine | None = None
     application.include_router(workspace_router)
     application.include_router(chat_router)
     application.include_router(coordination_router)
+    application.include_router(partner_rails_router)
     application.include_router(schedules_router)
 
     @application.get("/health", response_model=Health)

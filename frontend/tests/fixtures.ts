@@ -286,6 +286,32 @@ export function installMockApi() {
             operations: ["payment"],
           },
         ],
+        "/api/partner-rails/contracts": [
+          {
+            connector: "Gnani",
+            operation: "transcribe_audio",
+            method: "POST",
+            endpoint: "https://api.vachana.ai/stt/v3",
+            execution: "live_api",
+            truth_label: "LIVE_API",
+            documentation_url: "https://www.gnani.ai/speech-to-text-api",
+            ready: false,
+            blocker: "Set the local key.",
+          },
+          {
+            connector: "Pine Labs",
+            operation: "create_payment_link",
+            method: "POST",
+            endpoint:
+              "https://pluraluat.v2.pinepg.in/api/pay/v1/paymentlink",
+            execution: "documentation_simulation",
+            truth_label: "DOCUMENTATION_SIMULATION",
+            documentation_url:
+              "https://www.pinelabs.com/docs/online-payments/api/payment-links/create-payment-link",
+            ready: true,
+            blocker: null,
+          },
+        ],
         "/api/system-prompt": {
           prompt:
             "Backend-owned instructions: preserve the human approval boundary.",

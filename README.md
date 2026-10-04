@@ -25,7 +25,7 @@ These are working local reminders, **not SMS, WhatsApp, email, browser push or p
 
 ## Automatic local coordination
 
-For a new case, save household coordinates in it's customer case view and shop coordinates in the provider portal. Opening an eligible customer case automatically chooses the nearest available matching **recorded** shop, persists a simulated provider conversation, and prepares a fixture offer. The customer approves **total cost and timing together**; assignment then happens automatically using local mocks. The provider portal's **Report simulated completion (mock)** action records provider-reported completion and a local customer notification. It never fabricates household verification.
+For a new case, save household coordinates in its customer case view and shop coordinates in the provider portal. Opening an eligible customer case automatically chooses the nearest available matching **recorded** shop, persists a simulated provider conversation, and prepares a fixture offer. The customer approves **total cost and timing together**; assignment then happens automatically using local mocks. The provider portal's **Report simulated completion (mock)** action records provider-reported completion and a local customer notification. It never fabricates household verification.
 
 The fixture total is **INR 1,500**, with a next-day **10:00–12:00 UTC** simulated slot. These are demonstration values, not market prices or actual availability. Distances use saved coordinates and Haversine straight-line distance, not road travel. Shops with unknown coordinates are excluded. State survives reload/restart; automatic offer preparation happens when the customer case page is open, not through a background worker.
 
@@ -151,8 +151,8 @@ The smoke script starts bounded subprocesses, uses an isolated temporary databas
 2. Open `/project/cases/RK-2048`: Sangamesh's Kent water purifier has low water flow, a filter-replacement quote of **₹749**, and status **Waiting for approval**.
 3. Click **Try mock payment** before approving: the backend denies it and records the rule.
 4. Return to Simulation. Click **Run one step** six times: approval → assignment/mock payment → service evidence → provider confirmation → household confirmation → closure.
-5. Inspect the full timeline, evidence, decisions, request/response logs and truth labels.
-6. To demonstrate manual closure, reset, advance three steps, then use the Provider confirmation in `/provider` and Household confirmation in `/customer/cases/RK-2048` with matching demo attribution. Only the second confirmation closes the case. An unresolved report reopens it. For a new case without simulation,follow the [working model guide](docs/working-model.md).
+5. Open `/project/rails`: send the real voice note through Gnani, then record the exact Pine Labs and Delhivery documentation responses shown by the wizard. Inspect the full request/response ledger and truth labels.
+6. To demonstrate manual closure, reset, advance three steps, then use the Provider confirmation in `/provider` and Household confirmation in `/customer/cases/RK-2048` with matching demo attribution. Only the second confirmation closes the case. An unresolved report reopens it. For a new case without simulation, follow the [working model guide](docs/working-model.md).
 
 A rejected quote blocks advancement; the simulator never silently reverses a rejection. All scripted approvals and confirmations are documentary fixtures, not actual people authorizing real transactions. See [simulation guide](docs/simulation-guide.md).
 
@@ -160,15 +160,16 @@ A rejected quote blocks advancement; the simulator never silently reverses a rej
 
 | Capability                      | Implemented behavior                                                                 |
 | ------------------------------- | ------------------------------------------------------------------------------------ |
-| Gnani                           | Mock intake; no call or transcription                                                |
-| Pine Labs                       | Mock payment receipt; no money movement                                              |
-| Delhivery                       | Documentary dispatch/evidence placeholder; no actual technician/shipment API claimed |
+| Gnani competition console       | Optional real STT call to `https://api.vachana.ai/stt/v3`; disabled until a local key is supplied |
+| Pine Labs competition console   | Exact official UAT payment-link request/response recorded as documentation simulation; no funds move |
+| Delhivery competition console   | Wizard records the exact official B2C shipment/tracking request and response; no shipment is created |
+| Default scripted workflow       | Deterministic local mocks remain available for repeatable rehearsal                   |
 | WhatsApp / Email                | Local connector logs; nothing delivered                                              |
 | Service chat / AI provider      | Persisted local messages and deterministic rules/fixtures; no model inference        |
 | Gemini / Claude / OpenAI        | Provider extension interface only; real adapters are proposed, disabled              |
 | Local FastAPI / SQLite / signup | Actually executed locally; not an external `LIVE_API` integration                    |
 
-**Live external capabilities: none.** `LIVE_API` is reserved for a verified future integration. Every fixture/mock is `DOCUMENTATION_SIMULATION`; local user submissions are `REAL_HUMAN_INPUT`; roadmap claims are `PROPOSED_CAPABILITY`.
+`LIVE_API` is used only for the server-recorded Gnani HTTP request/response when live mode is explicitly enabled. Pine Labs and Delhivery remain `DOCUMENTATION_SIMULATION`, as required by the Wizard-of-Oz brief. Local user submissions are `REAL_HUMAN_INPUT`; roadmap claims are `PROPOSED_CAPABILITY`.
 
 ## Containers
 

@@ -54,6 +54,7 @@ def test_all_adapters_are_mock_and_do_not_claim_external_effects(client):
         "Gnani",
         "Pine Labs",
         "Delhivery",
+        "Local coordinator",
         "WhatsApp",
         "Email",
         "AI",

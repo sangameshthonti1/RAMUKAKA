@@ -77,11 +77,16 @@ Coordinator responses include `{case_id, mode: "local_mock", real_calls_supporte
 | PATCH  | `/api/providers/{provider_id}`                                | Change name/availability (provider role)                                                |
 | GET    | `/api/notifications`                                          | Local notification records                                                              |
 | GET    | `/api/rails`                                                  | Adapter capabilities and labels                                                         |
+| GET    | `/api/partner-rails/contracts`                                | Reviewed competition endpoints, execution mode, readiness and documentation source       |
+| POST   | `/api/partner-rails/{case_id}/gnani/transcribe`                | Multipart live Gnani STT call; local key required; raw response preserved                 |
+| POST   | `/api/partner-rails/{case_id}/documented-response`             | Record exact Pine Labs or Delhivery request/response from official documentation          |
 | GET    | `/api/system-prompt`                                          | Canonical backend prompt                                                                |
 | GET    | `/api/simulation`                                             | Step, total, next event, complete, case ID                                              |
 | POST   | `/api/simulation/next`                                        | Advance exactly one documentary event                                                   |
 | POST   | `/api/simulation/reset`                                       | Replace demo-scoped workflow only                                                       |
 | POST   | `/api/signup`                                                 | Store consented local interest, 201                                                     |
+
+The Gnani route accepts multipart fields `audio` and `language_code`. It logs filename, content type, byte size and SHA-256—not audio bytes or credentials. Pine Labs documentation input is restricted to the official UAT payment-link endpoint and must match the approved case amount. Delhivery documentation input accepts only HTTPS URLs under an official `delhivery.com` domain. Both documentary rails require an approved current service quote and are always labeled `DOCUMENTATION_SIMULATION`.
 
 ## Asset fields and category
 

@@ -247,3 +247,34 @@ class Health(Output):
 
 class SystemPrompt(Output):
     prompt: str
+
+
+class PartnerRailContract(Output):
+    connector: Literal["Gnani", "Pine Labs", "Delhivery"]
+    operation: str
+    method: str
+    endpoint: str
+    execution: Literal["live_api", "documentation_simulation", "wizard_documentation_input"]
+    truth_label: TruthLabel
+    documentation_url: str
+    ready: bool
+    blocker: str | None = None
+
+
+class DocumentedRailResponse(Input):
+    connector: Literal["Pine Labs", "Delhivery"]
+    operation: Literal["create_payment_link", "create_part_shipment", "track_part_shipment"]
+    endpoint: Annotated[str, Field(min_length=12, max_length=500)]
+    documentation_url: Annotated[str, Field(min_length=12, max_length=500)]
+    request: dict[str, Any]
+    response: dict[str, Any]
+
+    @model_validator(mode="after")
+    def connector_operation_pair(self):
+        allowed = {
+            "Pine Labs": {"create_payment_link"},
+            "Delhivery": {"create_part_shipment", "track_part_shipment"},
+        }
+        if self.operation not in allowed[self.connector]:
+            raise ValueError("Operation does not belong to the selected partner")
+        return self

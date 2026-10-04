@@ -2262,6 +2262,135 @@
         }
       }
     },
+    "/api/partner-rails/contracts": {
+      "get": {
+        "tags": [
+          "competition partner rails"
+        ],
+        "summary": "Rail Contracts",
+        "operationId": "rail_contracts_api_partner_rails_contracts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PartnerRailContract"
+                  },
+                  "type": "array",
+                  "title": "Response Rail Contracts Api Partner Rails Contracts Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/partner-rails/{case_id}/documented-response": {
+      "post": {
+        "tags": [
+          "competition partner rails"
+        ],
+        "summary": "Documented Response",
+        "operationId": "documented_response_api_partner_rails__case_id__documented_response_post",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Case Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentedRailResponse"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorCall"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/partner-rails/{case_id}/gnani/transcribe": {
+      "post": {
+        "tags": [
+          "competition partner rails"
+        ],
+        "summary": "Gnani Transcription",
+        "operationId": "gnani_transcription_api_partner_rails__case_id__gnani_transcribe_post",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Case Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_gnani_transcription_api_partner_rails__case_id__gnani_transcribe_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorCall"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/service-schedules": {
       "post": {
         "tags": [
@@ -3611,6 +3740,25 @@
         ],
         "title": "AssetEdit"
       },
+      "Body_gnani_transcription_api_partner_rails__case_id__gnani_transcribe_post": {
+        "properties": {
+          "audio": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Audio"
+          },
+          "language_code": {
+            "type": "string",
+            "title": "Language Code",
+            "default": "hi-IN"
+          }
+        },
+        "type": "object",
+        "required": [
+          "audio"
+        ],
+        "title": "Body_gnani_transcription_api_partner_rails__case_id__gnani_transcribe_post"
+      },
       "CaseCancel": {
         "properties": {
           "reason": {
@@ -4595,6 +4743,60 @@
         ],
         "title": "Decision"
       },
+      "DocumentedRailResponse": {
+        "properties": {
+          "connector": {
+            "type": "string",
+            "enum": [
+              "Pine Labs",
+              "Delhivery"
+            ],
+            "title": "Connector"
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "create_payment_link",
+              "create_part_shipment",
+              "track_part_shipment"
+            ],
+            "title": "Operation"
+          },
+          "endpoint": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 12,
+            "title": "Endpoint"
+          },
+          "documentation_url": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 12,
+            "title": "Documentation Url"
+          },
+          "request": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Request"
+          },
+          "response": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Response"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "connector",
+          "operation",
+          "endpoint",
+          "documentation_url",
+          "request",
+          "response"
+        ],
+        "title": "DocumentedRailResponse"
+      },
       "Edit": {
         "properties": {
           "expected_revision": {
@@ -5058,6 +5260,74 @@
           "name"
         ],
         "title": "ParticipantCreate"
+      },
+      "PartnerRailContract": {
+        "properties": {
+          "connector": {
+            "type": "string",
+            "enum": [
+              "Gnani",
+              "Pine Labs",
+              "Delhivery"
+            ],
+            "title": "Connector"
+          },
+          "operation": {
+            "type": "string",
+            "title": "Operation"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "endpoint": {
+            "type": "string",
+            "title": "Endpoint"
+          },
+          "execution": {
+            "type": "string",
+            "enum": [
+              "live_api",
+              "documentation_simulation",
+              "wizard_documentation_input"
+            ],
+            "title": "Execution"
+          },
+          "truth_label": {
+            "$ref": "#/components/schemas/TruthLabel"
+          },
+          "documentation_url": {
+            "type": "string",
+            "title": "Documentation Url"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready"
+          },
+          "blocker": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocker"
+          }
+        },
+        "type": "object",
+        "required": [
+          "connector",
+          "operation",
+          "method",
+          "endpoint",
+          "execution",
+          "truth_label",
+          "documentation_url",
+          "ready"
+        ],
+        "title": "PartnerRailContract"
       },
       "Provider": {
         "properties": {

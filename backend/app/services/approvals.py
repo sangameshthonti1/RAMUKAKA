@@ -293,7 +293,9 @@ def perform(audit: Audit, action: str, *, add_event: bool = True):
             },
         )
         audit.call(
-            "Delhivery", "assign_provider", {"case_id": case.id, "provider_id": case.provider_id}
+            "Local coordinator",
+            "assign_provider",
+            {"case_id": case.id, "provider_id": case.provider_id},
         )
         case.assigned = True
         case.status = "assigned"
@@ -333,7 +335,7 @@ def perform(audit: Audit, action: str, *, add_event: bool = True):
                 "ELIGIBLE_PROVIDER_REQUIRED",
             )
         call = audit.call(
-            "Delhivery",
+            "Local coordinator",
             "change_provider",
             {"case_id": case.id, "provider_id": provider.id, "approval_id": approval.id},
         )

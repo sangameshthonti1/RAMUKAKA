@@ -7,9 +7,11 @@ import type {
   CaseSummary,
   ConnectorCall,
   Decision,
+  DocumentedRailResponse,
   Evidence,
   Household,
   Notification,
+  PartnerRailContract,
   Provider,
   Rail,
   Signup,
@@ -118,6 +120,47 @@ export const api = {
   providers: () => request<Provider[]>("/providers"),
   notifications: () => request<Notification[]>("/notifications"),
   rails: () => request<Rail[]>("/rails"),
+  partnerContracts: () =>
+    request<PartnerRailContract[]>("/partner-rails/contracts"),
+  recordDocumentedResponse: (
+    caseId: string,
+    body: DocumentedRailResponse,
+  ) =>
+    request<ConnectorCall>(
+      `/partner-rails/${encodeURIComponent(caseId)}/documented-response`,
+      body,
+    ),
+  transcribeGnani: async (
+    caseId: string,
+    audio: File,
+    languageCode: string,
+  ): Promise<ConnectorCall> => {
+    const body = new FormData();
+    body.set("audio", audio);
+    body.set("language_code", languageCode);
+    let response: Response;
+    try {
+      response = await fetch(
+        `/api/partner-rails/${encodeURIComponent(caseId)}/gnani/transcribe`,
+        {
+          method: "POST",
+          headers: { "X-Demo-Role": getDemoRole() },
+          body,
+        },
+      );
+    } catch {
+      throw new ApiError(0, "Cannot reach the local backend.");
+    }
+    const data = (await response.json()) as unknown;
+    if (!response.ok) {
+      const detail =
+        data && typeof data === "object" && "detail" in data
+          ? data.detail
+          : undefined;
+      throw new ApiError(response.status, errorDetail(detail));
+    }
+    return data as ConnectorCall;
+  },
   prompt: () => request<{ prompt: string }>("/system-prompt"),
   simulation: () => request<SimulationState>("/simulation"),
   next: () => request<SimulationState>("/simulation/next", {}),

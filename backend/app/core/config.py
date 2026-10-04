@@ -29,6 +29,14 @@ class Settings(BaseSettings):
     gnani_api_key: SecretStr = Field(
         default=SecretStr(""), validation_alias="GNANI_API_KEY", repr=False, exclude=True
     )
+    gnani_live_enabled: bool = Field(
+        default=False, validation_alias=AliasChoices("GNANI_LIVE_ENABLED", "RK_GNANI_LIVE_ENABLED")
+    )
+    gnani_stt_url: str = Field(
+        default="https://api.vachana.ai/stt/v3",
+        validation_alias=AliasChoices("GNANI_STT_URL", "RK_GNANI_STT_URL"),
+    )
+    gnani_timeout_seconds: float = Field(default=45, ge=1, le=120)
     pine_labs_api_key: SecretStr = Field(
         default=SecretStr(""), validation_alias="PINE_LABS_API_KEY", repr=False, exclude=True
     )
@@ -86,4 +94,20 @@ class Settings(BaseSettings):
             or parsed.fragment
         ):
             raise ValueError("Frontend origin must be an exact local HTTP origin without a path")
+        return value
+
+    @field_validator("gnani_stt_url")
+    @classmethod
+    def official_gnani_stt_url(cls, value: str) -> str:
+        parsed = urlparse(value)
+        if (
+            parsed.scheme != "https"
+            or parsed.hostname != "api.vachana.ai"
+            or parsed.path != "/stt/v3"
+            or parsed.username
+            or parsed.password
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise ValueError("Gnani STT URL must be the reviewed official /stt/v3 endpoint")
         return value
