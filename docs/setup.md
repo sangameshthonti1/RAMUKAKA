@@ -14,7 +14,7 @@ Use Python 3.12, Node 22.12+ (24 LTS recommended), and npm. The current workspac
 | `DATABASE_URL`          | Absolute local SQLite URL ending in `backend/data/ramukaka.db`   |
 | `CONNECTOR_MODE`        | `mock` only; any other value rejects startup                     |
 | `AI_PROVIDER`           | `mock` by default; set `gemini` only for the reviewed live adapter |
-| `AI_MODEL`              | `gemini-3.8-flash`; other model IDs fail closed                  |
+| `AI_MODEL`              | `gemini-3.8-flash` or reviewed fallback `gemini-3.5-flash`       |
 | `GEMINI_API_KEY`        | Empty; backend-only secret required for live agent decisions     |
 | `GNANI_API_KEY`         | Empty; required only for the explicit live Gnani STT console     |
 | `GNANI_LIVE_ENABLED`    | `false`; must be `true` to permit the reviewed Gnani endpoint    |

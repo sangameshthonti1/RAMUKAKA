@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import json
 from typing import Any, Literal
@@ -22,6 +23,8 @@ from app.models import (
 )
 
 GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
+RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}
+RETRY_DELAYS_SECONDS = (1, 2, 4)
 
 
 class ModelDecision(BaseModel):
@@ -172,16 +175,27 @@ async def decide(session: Session, settings: Settings, case_id: str) -> dict[str
     status: Literal["live_succeeded", "live_failed"] = "live_failed"
     try:
         async with httpx.AsyncClient(timeout=settings.ai_timeout_seconds) as client:
-            response = await client.post(
-                endpoint,
-                headers={"x-goog-api-key": key, "Content-Type": "application/json"},
-                json=payload,
-            )
+            attempts = 0
+            while True:
+                attempts += 1
+                response = await client.post(
+                    endpoint,
+                    headers={"x-goog-api-key": key, "Content-Type": "application/json"},
+                    json=payload,
+                )
+                if (
+                    response.status_code not in RETRYABLE_STATUS_CODES
+                    or attempts > len(RETRY_DELAYS_SECONDS)
+                ):
+                    break
+                await asyncio.sleep(RETRY_DELAYS_SECONDS[attempts - 1])
         api_response = response.json()
         raw_text = _response_text(api_response)
         response_log = {
             "http_status": response.status_code,
+            "attempts": attempts,
             "model_output": raw_text,
+            "api_error": api_response.get("error"),
             "usage_metadata": api_response.get("usageMetadata"),
         }
         if response.is_success and raw_text:

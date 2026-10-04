@@ -109,3 +109,57 @@ def test_invalid_model_output_creates_no_decision_or_message(client, monkeypatch
     assert result["status"] == "live_failed"
     assert result["decision"] is None
     assert result["notification"] is None
+
+
+def test_transient_503_is_retried_then_succeeds(client, monkeypatch):
+    settings = client.app.state.settings
+    settings.ai_provider = "gemini"
+    settings.ai_model = "gemini-3.5-flash"
+    settings.ai_api_key = SecretStr("test-key")
+    statuses = [503, 200]
+
+    async def no_wait(_seconds):
+        return None
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def post(self, url, *, headers, json):
+            status = statuses.pop(0)
+            body = (
+                {"error": {"message": "temporarily unavailable"}}
+                if status == 503
+                else {
+                    "candidates": [
+                        {
+                            "content": {
+                                "parts": [
+                                    {
+                                        "text": (
+                                            '{"action":"request_household_approval",'
+                                            '"reason":"Consent is required.",'
+                                            '"message":"Please approve the quote."}'
+                                        )
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            )
+            return httpx.Response(status, json=body, request=httpx.Request("POST", url))
+
+    monkeypatch.setattr(gemini.asyncio, "sleep", no_wait)
+    monkeypatch.setattr(gemini.httpx, "AsyncClient", FakeClient)
+    response = client.post("/api/agent/RK-2048/decide", json={})
+    result = response.json()
+    assert result["status"] == "live_succeeded"
+    assert result["model"] == "gemini-3.5-flash"
+    assert result["connector_call"]["response"]["attempts"] == 2

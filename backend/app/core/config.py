@@ -5,6 +5,7 @@ from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
+REVIEWED_GEMINI_MODELS = {"gemini-3.8-flash", "gemini-3.5-flash"}
 
 
 class Settings(BaseSettings):
@@ -71,8 +72,8 @@ class Settings(BaseSettings):
     @field_validator("ai_model")
     @classmethod
     def reviewed_gemini_model(cls, value: str) -> str:
-        if value != "gemini-3.8-flash":
-            raise ValueError("Use the reviewed stable Gemini 3.8 Flash model")
+        if value not in REVIEWED_GEMINI_MODELS:
+            raise ValueError("Use a reviewed stable Gemini Flash model")
         return value
 
     @field_validator("connector_mode")

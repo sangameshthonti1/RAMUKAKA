@@ -37,9 +37,14 @@ def test_unreviewed_models_fail_closed(name, monkeypatch):
         model_provider(name)
 
 
-def test_reviewed_gemini_configuration_requires_exact_model():
-    settings = Settings(ai_provider="gemini", ai_model="gemini-3.8-flash")
+@pytest.mark.parametrize("model", ["gemini-3.8-flash", "gemini-3.5-flash"])
+def test_reviewed_gemini_configuration_accepts_stable_models(model):
+    settings = Settings(ai_provider="gemini", ai_model=model)
     assert settings.ai_provider == "gemini"
+    assert settings.ai_model == model
+
+
+def test_reviewed_gemini_configuration_rejects_unreviewed_model():
     with pytest.raises(ValidationError, match="reviewed stable"):
         Settings(ai_provider="gemini", ai_model="gemini-experimental")
 
