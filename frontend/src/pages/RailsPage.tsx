@@ -48,26 +48,30 @@ export default function RailsPage() {
       streamRef.current = stream;
       chunksRef.current = [];
       const preferredType = [
-        "audio/webm;codecs=opus",
-        "audio/webm",
         "audio/ogg;codecs=opus",
+        "audio/ogg",
         "audio/mp4",
       ].find((type) => MediaRecorder.isTypeSupported(type));
-      const recorder = new MediaRecorder(
-        stream,
-        preferredType ? { mimeType: preferredType } : undefined,
-      );
+      if (!preferredType) {
+        stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        setMicrophoneError(
+          "This browser cannot record a Gnani-compatible OGG or M4A voice note. Use the file upload fallback with AAC, MP3, M4A, OGG, WAV, or FLAC.",
+        );
+        return;
+      }
+      const recorder = new MediaRecorder(stream, { mimeType: preferredType });
       recorderRef.current = recorder;
       recorder.ondataavailable = (event) => {
         if (event.data.size) chunksRef.current.push(event.data);
       };
       recorder.onstop = () => {
-        const mimeType = recorder.mimeType || chunksRef.current[0]?.type || "audio/webm";
+        const mimeType = recorder.mimeType || chunksRef.current[0]?.type || preferredType;
         const extension = mimeType.includes("ogg")
           ? "ogg"
           : mimeType.includes("mp4")
             ? "m4a"
-            : "webm";
+            : "ogg";
         const blob = new Blob(chunksRef.current, { type: mimeType });
         if (blob.size) {
           const file = new File([blob], `ramukaka-voice-${Date.now()}.${extension}`, {
@@ -264,7 +268,7 @@ export default function RailsPage() {
               label="Or upload an existing voice note"
               name="audio"
               type="file"
-              accept="audio/*"
+              accept=".aac,.mp3,.m4a,.ogg,.wav,.flac,audio/aac,audio/mpeg,audio/mp4,audio/ogg,audio/wav,audio/flac"
               onChange={() => clearRecording()}
             />
             <SelectField label="Language" name="language_code" defaultValue="hi-IN">

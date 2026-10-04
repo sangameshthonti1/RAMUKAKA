@@ -202,10 +202,9 @@ describe("portal and project views", () => {
     const record = await screen.findByRole("button", {
       name: "Record with microphone",
     });
-    expect(screen.getByLabelText("Or upload an existing voice note")).toHaveAttribute(
-      "accept",
-      "audio/*",
-    );
+    expect(
+      screen.getByLabelText("Or upload an existing voice note").getAttribute("accept"),
+    ).toContain(".ogg");
     await user.click(record);
     expect(screen.getByRole("alert")).toHaveTextContent(
       /does not support microphone recording/i,
