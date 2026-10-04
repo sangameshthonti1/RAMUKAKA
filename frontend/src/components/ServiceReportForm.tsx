@@ -2,6 +2,7 @@ import { useApiMutation } from "../hooks/useApi";
 import { workspaceApi } from "../services/workspace";
 import type { CaseDetail } from "../types/api";
 import { formText } from "../utils/forms";
+import { fileEvidenceReceipt } from "../utils/evidence";
 import { HumanInputNote, MutationFeedback } from "./ui";
 import { TextAreaField } from "./WorkspaceFields";
 
@@ -29,16 +30,19 @@ export function ServiceReportForm({ item }: { item: CaseDetail }) {
       <h3>Record service evidence</h3>
       <form
         className="form-stack"
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault();
           const form = event.currentTarget;
           const data = new FormData(form);
+          const proof = data.get("proof_file");
+          if (!(proof instanceof File) || proof.size === 0) return;
           mutation.mutate(
             {
               provider_id: item.provider_id!,
               expected_revision: item.service_revision,
               work_performed: formText(data, "work_performed"),
               observed_result: formText(data, "observed_result"),
+              ...(await fileEvidenceReceipt(proof)),
             },
             { onSuccess: () => form.reset() },
           );
@@ -52,6 +56,15 @@ export function ServiceReportForm({ item }: { item: CaseDetail }) {
           required
           placeholder="Describe the work you actually performed."
         />
+        <label htmlFor="service-proof">Photo or video of the completed work</label>
+        <input
+          id="service-proof"
+          name="proof_file"
+          type="file"
+          accept="image/*,video/*"
+          capture="environment"
+          required
+        />
         <TextAreaField
           label="Observed result"
           name="observed_result"
@@ -62,12 +75,13 @@ export function ServiceReportForm({ item }: { item: CaseDetail }) {
         />
         <HumanInputNote />
         <p className="small muted">
-          Select Provider attribution. This records your claim, not
-          independently verified proof. A new report clears previous
+          Select Provider attribution. The file receives a timestamp and
+          SHA-256 fingerprint so later changes are detectable, but the physical
+          claim is not independently verified. A new report clears previous
           confirmations; both parties must confirm the current result again.
         </p>
         <button className="btn btn-primary" disabled={mutation.isPending}>
-          {mutation.isPending ? "Saving…" : "Save service report"}
+          {mutation.isPending ? "Recording evidence…" : "Save report and evidence"}
         </button>
         <MutationFeedback
           mutation={mutation}

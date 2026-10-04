@@ -133,3 +133,8 @@ class ServiceReportCreate(Input):
     expected_revision: Annotated[int, Field(strict=True, ge=1)]
     work_performed: Annotated[str, Field(min_length=10, max_length=2000)]
     observed_result: Annotated[str, Field(min_length=10, max_length=2000)]
+    proof_file_name: Annotated[str, Field(min_length=1, max_length=255)]
+    proof_media_type: Annotated[str, Field(min_length=3, max_length=120)]
+    proof_size_bytes: Annotated[int, Field(strict=True, ge=1, le=25_000_000)]
+    proof_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
+    proof_captured_at: Annotated[str, Field(min_length=20, max_length=40)]

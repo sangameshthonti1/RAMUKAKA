@@ -7,6 +7,7 @@ import {
   Check,
   Circle,
   FileCheck2,
+  Camera,
   RotateCcw,
   ShieldCheck,
   Sparkles,
@@ -26,6 +27,7 @@ import {
   TruthBadge,
 } from "../components/ui";
 import { money } from "../utils/format";
+import { fileEvidenceReceipt } from "../utils/evidence";
 
 const CASE_ID = "RK-2048";
 const PROVIDER_ID = "provider-kent-care";
@@ -147,6 +149,7 @@ export default function GuidedDemoPage() {
   const [observedResult, setObservedResult] = useState(
     "Water flow returned to normal during the technician's on-site test. No remaining issue was observed.",
   );
+  const [proofFile, setProofFile] = useState<File | null>(null);
   const [providerNote, setProviderNote] = useState(
     "I checked the replacement and observed normal water flow after service.",
   );
@@ -178,13 +181,15 @@ export default function GuidedDemoPage() {
     setDemoRole("household");
     return api.action(CASE_ID, "payment");
   });
-  const report = useApiMutation(() => {
+  const report = useApiMutation(async () => {
     setDemoRole("provider");
+    if (!proofFile) throw new Error("Capture or select a photo/video proof first.");
     return workspaceApi.serviceReport(CASE_ID, {
       provider_id: PROVIDER_ID,
       expected_revision: item!.service_revision,
       work_performed: workPerformed.trim(),
       observed_result: observedResult.trim(),
+      ...(await fileEvidenceReceipt(proofFile)),
     });
   });
   const providerConfirm = useApiMutation(() => {
@@ -350,9 +355,21 @@ export default function GuidedDemoPage() {
                     <textarea id="guided-work" required minLength={10} maxLength={2000} rows={3} value={workPerformed} onChange={(event) => setWorkPerformed(event.target.value)} />
                     <label htmlFor="guided-result">Observed result</label>
                     <textarea id="guided-result" required minLength={10} maxLength={2000} rows={3} value={observedResult} onChange={(event) => setObservedResult(event.target.value)} />
-                    <p className="small muted">Human input · local demo. Enter only what the provider actually observed.</p>
-                    <button className="btn btn-primary self-start" disabled={report.isPending || !workPerformed.trim() || !observedResult.trim()}>
-                      <FileCheck2 size={17} /> {report.isPending ? "Saving…" : "Save work report"}
+                    <label htmlFor="guided-proof">Photo or video of the completed work</label>
+                    <input
+                      id="guided-proof"
+                      type="file"
+                      accept="image/*,video/*"
+                      capture="environment"
+                      required
+                      onChange={(event) => setProofFile(event.target.files?.[0] ?? null)}
+                    />
+                    {proofFile && (
+                      <p className="small muted"><Camera size={15} /> Ready to record: {proofFile.name} · {(proofFile.size / 1024).toFixed(1)} KB</p>
+                    )}
+                    <p className="small muted">Provider-supplied evidence · the system records its capture time and SHA-256 fingerprint. This makes later changes detectable; it does not independently prove the physical claim.</p>
+                    <button className="btn btn-primary self-start" disabled={report.isPending || !workPerformed.trim() || !observedResult.trim() || !proofFile}>
+                      <FileCheck2 size={17} /> {report.isPending ? "Recording evidence…" : "Save report and evidence"}
                     </button>
                     <MutationFeedback mutation={report} success="Service evidence saved. Provider confirmation is now required." />
                   </form>
@@ -387,23 +404,23 @@ export default function GuidedDemoPage() {
                     <span><Check size={28} /></span>
                     <div>
                       <p className="eyebrow">OUTCOME ACHIEVED</p>
-                      <h2>The repair is complete—with proof from both sides.</h2>
-                      <p>The price approval, provider assignment, work report and both final checks are recorded.</p>
+                      <h2>The repair is closed with evidence from both sides.</h2>
+                      <p>The provider's media receipt and work report, plus both parties' final confirmations, are recorded. Conflicting or suspicious evidence still requires human review.</p>
                     </div>
                   </div>
                 )}
               </section>
 
               <aside className="guided-sidebar space-y-6">
-                <Panel title="Proof collected so far" kicker="SAVED RECORDS">
+                <Panel title="Evidence collected so far" kicker="SAVED RECORDS">
                   <ul className="guided-facts">
-                    <li><Check size={16} /> {item.evidence.length} proof record{item.evidence.length === 1 ? "" : "s"}</li>
+                    <li><Check size={16} /> {item.evidence.length} evidence record{item.evidence.length === 1 ? "" : "s"}</li>
                     <li><Check size={16} /> {item.decisions.length} explained decision{item.decisions.length === 1 ? "" : "s"}</li>
                     <li><Check size={16} /> {liveCalls.length} live API call{liveCalls.length === 1 ? "" : "s"}</li>
                     <li><Check size={16} /> {documentedCalls.length} documented partner response{documentedCalls.length === 1 ? "" : "s"}</li>
                   </ul>
                   <div className="button-stack mt-5">
-                    <RouteLink to={`/project/evidence?case=${CASE_ID}`}>See all proof and history</RouteLink>
+                    <RouteLink to={`/project/evidence?case=${CASE_ID}`}>See all evidence and history</RouteLink>
                     <RouteLink to="/project/rails">See connected services</RouteLink>
                   </div>
                 </Panel>

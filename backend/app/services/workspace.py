@@ -219,11 +219,23 @@ def submit_service_report(audit: Audit, body: s.ServiceReportCreate):
             "service_report",
             "APPROVED_SERVICE_REQUIRED",
         )
+    proof_receipt = (
+        f"\nProof receipt: {body.proof_file_name} ({body.proof_media_type}, "
+        f"{body.proof_size_bytes} bytes), captured {body.proof_captured_at}, "
+        f"SHA-256 {body.proof_sha256}"
+    )
+    source = (
+        "Provider-supplied media receipt; file integrity is tamper-evident, "
+        "but physical truth is not independently verified"
+    )
     audit.record(
         m.Evidence,
         title="Provider service report",
-        description=f"Work performed: {body.work_performed}\nObserved result: {body.observed_result}",
-        source="Local provider form; identity and claims not independently verified",
+        description=(
+            f"Work performed: {body.work_performed}\n"
+            f"Observed result: {body.observed_result}{proof_receipt}"
+        ),
+        source=source,
         truth_label=HUMAN,
         kind="service",
         provider_id=case.provider_id,

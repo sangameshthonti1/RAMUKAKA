@@ -57,6 +57,11 @@ export const workspaceApi = {
       expected_revision: number;
       work_performed: string;
       observed_result: string;
+      proof_file_name: string;
+      proof_media_type: string;
+      proof_size_bytes: number;
+      proof_sha256: string;
+      proof_captured_at: string;
     },
   ) =>
     request<CaseDetail>(
