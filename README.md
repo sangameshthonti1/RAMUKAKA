@@ -185,3 +185,4 @@ The six-step scripted demonstration is scoped to RK-2048; every other new case u
 - [Setup](docs/setup.md) · [API contract](docs/api-contract.md) · [Safety rules](docs/safety-rules.md)
 - [Submission mapping](docs/submission-mapping.md) · [Validation record](docs/verification.md)
 - MIT licensed; vendor names do not imply partnerships.
+  Thank you:)
