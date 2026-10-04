@@ -1,0 +1,8 @@
+node_modules
+dist
+.npm-cache
+.browsers
+playwright-report
+test-results
+coverage
+*.tsbuildinfo

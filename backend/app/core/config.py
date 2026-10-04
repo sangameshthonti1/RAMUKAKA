@@ -1,0 +1,89 @@
+from pathlib import Path
+from urllib.parse import urlparse
+
+from pydantic import AliasChoices, Field, SecretStr, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_ROOT = Path(__file__).resolve().parents[2]
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="RK_", extra="ignore", populate_by_name=True)
+
+    app_env: str = Field(
+        default="development", validation_alias=AliasChoices("APP_ENV", "RK_APP_ENV")
+    )
+    database_url: str = Field(
+        default=f"sqlite:///{BACKEND_ROOT / 'data' / 'ramukaka.db'}",
+        validation_alias=AliasChoices("DATABASE_URL", "RK_DATABASE_URL"),
+    )
+    connector_mode: str = Field(
+        default="mock", validation_alias=AliasChoices("CONNECTOR_MODE", "RK_CONNECTOR_MODE")
+    )
+    ai_provider: str = Field(
+        default="mock", validation_alias=AliasChoices("AI_PROVIDER", "RK_AI_PROVIDER")
+    )
+    ai_api_key: SecretStr = Field(
+        default=SecretStr(""), validation_alias="AI_API_KEY", repr=False, exclude=True
+    )
+    gnani_api_key: SecretStr = Field(
+        default=SecretStr(""), validation_alias="GNANI_API_KEY", repr=False, exclude=True
+    )
+    pine_labs_api_key: SecretStr = Field(
+        default=SecretStr(""), validation_alias="PINE_LABS_API_KEY", repr=False, exclude=True
+    )
+    delhivery_api_key: SecretStr = Field(
+        default=SecretStr(""), validation_alias="DELHIVERY_API_KEY", repr=False, exclude=True
+    )
+    whatsapp_access_token: SecretStr = Field(
+        default=SecretStr(""), validation_alias="WHATSAPP_ACCESS_TOKEN", repr=False, exclude=True
+    )
+    frontend_origin: str = "http://localhost:5173"
+    auto_migrate: bool = True
+    auto_seed: bool = True
+    service_reminders_enabled: bool = True
+    service_reminder_interval_seconds: float = Field(default=60, ge=0.01, le=86400)
+    service_reminder_batch_size: int = Field(default=100, ge=1, le=1000)
+
+    @field_validator("ai_provider")
+    @classmethod
+    def mock_model_only(cls, value: str) -> str:
+        if value != "mock":
+            raise ValueError(
+                "Real AI providers are unsupported; implement and review an adapter before enabling one"
+            )
+        return value
+
+    @field_validator("connector_mode")
+    @classmethod
+    def mock_only(cls, value: str) -> str:
+        if value != "mock":
+            raise ValueError(
+                "Only mock connectors are implemented; external/real mode is unsupported"
+            )
+        return value
+
+    @field_validator("database_url")
+    @classmethod
+    def sqlite_only(cls, value: str) -> str:
+        if not value.startswith("sqlite:///"):
+            raise ValueError("Only local SQLite is supported")
+        return value
+
+    @field_validator("frontend_origin")
+    @classmethod
+    def local_origin(cls, value: str) -> str:
+        parsed = urlparse(value)
+        if parsed.port is not None and not 1 <= parsed.port <= 65535:
+            raise ValueError("Frontend origin has an invalid port")
+        if (
+            parsed.scheme != "http"
+            or parsed.hostname not in {"localhost", "127.0.0.1"}
+            or parsed.username
+            or parsed.password
+            or parsed.path
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise ValueError("Frontend origin must be an exact local HTTP origin without a path")
+        return value

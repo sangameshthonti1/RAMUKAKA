@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TruthLabel",
+  "description": "Provenance, not proof of correctness. No external LIVE_API adapter is currently implemented.",
+  "type": "string",
+  "enum": ["LIVE_API", "REAL_HUMAN_INPUT", "DOCUMENTATION_SIMULATION", "PROPOSED_CAPABILITY"]
+}

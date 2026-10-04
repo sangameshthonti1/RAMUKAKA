@@ -1,0 +1,14 @@
+{
+  "id": "RK-2048",
+  "truth_label": "DOCUMENTATION_SIMULATION",
+  "household_member": "Sangamesh",
+  "asset": "Kent water purifier",
+  "complaint": "Low water flow",
+  "suggested_service": "Filter replacement",
+  "quote_amount": 749,
+  "currency": "INR",
+  "status": "waiting_for_approval",
+  "initial_events": ["Incoming customer report", "Agent classification", "Asset-history lookup", "Provider selection", "Quote", "Approval request"],
+  "remaining_script_events": ["Customer approval", "Provider assignment", "Service evidence", "Provider completion confirmation", "Household confirmation", "Final closure"],
+  "note": "Descriptive scenario only. Executable canonical seed is backend/app/seed/demo.py; future script events are not preloaded as facts."
+}

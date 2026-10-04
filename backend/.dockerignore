@@ -1,0 +1,12 @@
+.venv
+.bootstrap
+.python
+.python-bin
+.uv-cache
+.pip-cache
+__pycache__
+.pytest_cache
+*.pyc
+data/*
+*.db*
+.env

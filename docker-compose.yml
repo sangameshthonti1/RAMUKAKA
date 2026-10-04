@@ -1,0 +1,28 @@
+services:
+  backend:
+    build: ./backend
+    env_file: .env.example
+    environment:
+      DATABASE_URL: sqlite:////backend/data/ramu_kaka.db
+      CONNECTOR_MODE: mock
+      AI_PROVIDER: mock
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - backend-data:/backend/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  backend-data:

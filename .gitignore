@@ -1,0 +1,32 @@
+# Dependencies, runtimes and local caches
+node_modules/
+.npm-cache/
+.venv/
+.bootstrap/
+.python/
+.python-bin/
+.uv-cache/
+.pip-cache/
+.browsers/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+# Local state and generated output
+*.db
+*.db-*
+*.sqlite*
+backend/data/*
+!backend/data/.gitkeep
+frontend/dist/
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+artifacts/
+*.log
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+!.env.example
