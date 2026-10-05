@@ -22,7 +22,6 @@ server {
     }
 
     location ~ ^/api/partner-rails/[^/]+/gnani/transcribe$ {
-        include /etc/nginx/snippets/ramukaka-auth.conf;
         limit_req zone=gnani_demo burst=2 nodelay;
         limit_req_status 429;
         client_max_body_size 11m;
@@ -34,7 +33,6 @@ server {
     }
 
     location ~ ^/api/agent/[^/]+/decide$ {
-        include /etc/nginx/snippets/ramukaka-auth.conf;
         limit_req zone=agent_demo burst=2 nodelay;
         limit_req_status 429;
         client_max_body_size 16k;
@@ -46,7 +44,6 @@ server {
     }
 
     location /api/ {
-        include /etc/nginx/snippets/ramukaka-auth.conf;
         client_max_body_size 1m;
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
@@ -55,13 +52,11 @@ server {
     }
 
     location /assets/ {
-        include /etc/nginx/snippets/ramukaka-auth.conf;
         try_files $uri =404;
         expires 1y;
     }
 
     location / {
-        include /etc/nginx/snippets/ramukaka-auth.conf;
         try_files $uri $uri/ /index.html;
         expires -1;
     }

@@ -32,5 +32,3 @@ services:
         value: https://api.vachana.ai/stt/v3
       - key: GNANI_API_KEY
         sync: false
-      - key: RK_DEMO_ACCESS_PIN
-        sync: false

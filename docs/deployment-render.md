@@ -1,4 +1,4 @@
-# Protected Render deployment
+# Public Render demonstration deployment
 
 This deployment is for the Round 3 demonstration, not an unauthenticated production rollout. It
 runs the built React application, nginx and one FastAPI worker in a single free Render web service.
@@ -10,19 +10,16 @@ deployment for unique evidence or data that cannot be recreated.
 
 - `Dockerfile.render` builds the frontend and backend into one image. Only nginx binds to Render's
   public `PORT`; FastAPI listens privately on `127.0.0.1:8000`.
-- Every page and `/api` call requires HTTP Basic authentication. The username is `demo`; the
-  password is the value of the Render secret `RK_DEMO_ACCESS_PIN`.
-- `/health` is deliberately the only unauthenticated route so Render can check the service.
+- Pages and `/api` calls are public. `/health` remains available for Render health checks.
+- Public access is suitable only for disposable demonstration data: the application does not implement user authentication or tenant isolation.
 - The Gnani upload route accepts at most 11 MB and is limited at nginx to five requests per minute.
   Gemini decisions are limited to ten requests per minute. Both have a small rehearsal burst.
-- The PIN is converted to a bcrypt password file at startup and removed from the environment before
-  nginx and FastAPI start. Startup fails if it is missing or shorter than eight characters.
+
 - The browser and API share one HTTPS origin, so no API URL or secret is built into the frontend.
 - `render.yaml` keeps general connectors in mock mode while enabling the reviewed Gemini decision
   adapter. Gnani STT and Gemini can run live; Pine Labs and Delhivery remain documentation simulations.
 
-The PIN gate is appropriate for a bounded jury demo. It is not user authentication, tenant
-isolation, authorization, account recovery or an audit-grade identity system.
+There is no access gate or user authentication. Do not enter personal, financial, secret or production data, and do not treat portal selection as an identity boundary.
 
 ## 1. Deploy the Blueprint
 
@@ -34,10 +31,9 @@ isolation, authorization, account recovery or an audit-grade identity system.
 5. Supply all prompted secrets:
    - `GNANI_API_KEY`: the rotated Gnani key. Never paste it into GitHub or a frontend variable.
    - `GEMINI_API_KEY`: a Google AI Studio key used only by the backend live-agent endpoint.
-   - `RK_DEMO_ACCESS_PIN`: a new private PIN/passphrase of at least eight characters.
+
 6. Deploy the Blueprint and wait for `/health` to become healthy.
-7. Open the generated `https://<service>.onrender.com` URL. The browser prompts for credentials.
-   Enter username `demo` and the PIN from step 5.
+7. Open the generated `https://<service>.onrender.com` URL and verify the public landing page loads without credentials.
 
 The database URL is already fixed to `sqlite:////backend/data/ramu_kaka.db`. Startup applies
 migrations and idempotently adds missing demo fixtures. On the Free plan this file does **not**
@@ -65,8 +61,7 @@ The service must be healthy on its Render URL before adding the custom name.
 3. Sign in at `https://runs-on.dev/manage`, open the claimed name, select **CNAME**, paste the Render
    target and save.
 4. Return to Render and select **Verify**. Wait for DNS and certificate issuance.
-5. Open `https://ramukaka.runs-on.dev`, authenticate as `demo`, allow microphone access, and run one
-   short Gnani rehearsal.
+5. Open `https://ramukaka.runs-on.dev`, allow microphone access only for a deliberate demo, and run one short Gnani rehearsal.
 
 If Render asks for a TXT record at the same hostname, `runs-on.dev` cannot publish that TXT beside a
 CNAME. Do not weaken or invent DNS records. Keep the working Render URL and configure a `URL`
@@ -76,7 +71,7 @@ verification request.
 ## 3. Pre-recording checklist
 
 1. Confirm `GET /health` reports `connector_mode: mock`.
-2. Sign in through the PIN gate and select the correct target case on **Project → Rails & APIs**.
+2. Select the correct target case on **Project → Rails & APIs**. Use disposable demo inputs only because the deployment is public.
 3. Confirm the Gnani and Gemini contracts say ready without revealing either key.
 4. Record a short voice note and verify a Gnani `live_succeeded` ledger entry.
 5. Review the transcript before attaching it as `REAL_HUMAN_INPUT`.
@@ -86,7 +81,7 @@ verification request.
 
 ## Operations and rollback
 
-- Change the PIN, Gnani key or Gemini key only in Render's secret settings, then redeploy.
+- Change the Gnani or Gemini key only in Render's secret settings, then redeploy.
 - A `429` on Gnani means the demo rate limit was reached; wait rather than bypassing it.
 - Every free-service spin-down, restart or deploy can reset SQLite to the seeded demo state.
 - Keep one worker and one service while using SQLite. PostgreSQL, real identity, per-household
