@@ -43,14 +43,14 @@ def record_service(audit: Audit):
         )
     if not service_ready(audit):
         audit.call(
-            "Delhivery",
+            "Local coordinator",
             "record_service_evidence",
             {"case_id": case.id, "provider_id": case.provider_id},
         )
         audit.evidence(
             "Documentary service report",
             "Mock technician fixture: filter replaced and water-flow check passed. Not a real visit.",
-            "Delhivery mock / documentary service fixture",
+            "Local coordinator / documentary service fixture",
             service=True,
         )
     case.status = "awaiting_confirmation"

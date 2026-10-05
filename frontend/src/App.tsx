@@ -15,6 +15,7 @@ import SystemPromptPage from "./pages/SystemPromptPage";
 import BusinessPlanPage from "./pages/BusinessPlanPage";
 import RisksPage from "./pages/RisksPage";
 import LandingPage from "./pages/LandingPage";
+import GuidedDemoPage from "./pages/GuidedDemoPage";
 import { PageHeading, RouteLink } from "./components/ui";
 function PortalChoice() {
   return (
@@ -25,6 +26,16 @@ function PortalChoice() {
         description="Choose a workspace to explore the saved household service prototype. This selection does not verify identity."
       />
       <div className="detail-grid">
+        <div className="panel p-6 space-y-4">
+          <h2>See one repair from start to finish</h2>
+          <p>
+            Follow one repair through price approval, the provider's work and
+            final checks by both sides. You will always see the next action.
+          </p>
+          <Link className="btn btn-primary" to="/project/demo">
+            Start step-by-step demo
+          </Link>
+        </div>
         <div className="panel p-6 space-y-4">
           <h2>For households</h2>
           <p>
@@ -70,7 +81,8 @@ export default function App() {
         />
       </Route>
       <Route path="project" element={<ConsoleLayout />}>
-        <Route index element={<Navigate to="/customer" replace />} />
+        <Route index element={<Navigate to="/project/demo" replace />} />
+        <Route path="demo" element={<GuidedDemoPage />} />
         <Route path="cases" element={<CaseRoomPage />} />
         <Route path="cases/:caseId" element={<CaseRoomPage />} />
         <Route path="my-home" element={<MyHomePage />} />
@@ -93,6 +105,7 @@ export default function App() {
         element={<Navigate to="/customer/home" replace />}
       />
       <Route path="providers" element={<Navigate to="/provider" replace />} />
+      <Route path="demo" element={<Navigate to="/project/demo" replace />} />
       <Route
         path="simulation"
         element={<Navigate to="/project/simulation" replace />}

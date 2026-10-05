@@ -66,6 +66,11 @@ def report(client, case, provider, status=201):
             "expected_revision": case["service_revision"],
             "work_performed": "Replaced the faulty thermostat.",
             "observed_result": "Measured the documented cooling result.",
+            "proof_file_name": "completion.jpg",
+            "proof_media_type": "image/jpeg",
+            "proof_size_bytes": 2048,
+            "proof_sha256": "a" * 64,
+            "proof_captured_at": "2026-10-04T17:20:00.000Z",
         },
         PROVIDER,
         status,
@@ -167,6 +172,51 @@ def test_service_report_is_bound_to_assignment_and_rejects_forged_label(client):
         "truth_label": "LIVE_API",
     }
     post(client, f"/cases/{case['id']}/service-reports", body, PROVIDER, 422)
+
+
+def test_service_report_records_complete_tamper_evident_media_receipt(client):
+    _, _, provider, case = setup_case(client)
+    case = approve_assign(client, quote(client, case, provider))
+    body = {
+        "provider_id": provider["id"],
+        "expected_revision": case["service_revision"],
+        "work_performed": "Recorded replacement and connection checks",
+        "observed_result": "Recorded normal cooling during the final test",
+        "proof_file_name": "completion.jpg",
+        "proof_media_type": "image/jpeg",
+        "proof_size_bytes": 2048,
+        "proof_sha256": "a" * 64,
+        "proof_captured_at": "2026-10-04T17:20:00.000Z",
+    }
+    updated = post(
+        client,
+        f"/cases/{case['id']}/service-reports",
+        body,
+        PROVIDER,
+    )
+    evidence = updated["evidence"][-1]
+    assert "SHA-256 " + "a" * 64 in evidence["description"]
+    assert "tamper-evident" in evidence["source"]
+    assert "not independently verified" in evidence["source"]
+
+
+def test_service_report_rejects_partial_media_receipt(client):
+    _, _, provider, case = setup_case(client)
+    case = approve_assign(client, quote(client, case, provider))
+    body = {
+        "provider_id": provider["id"],
+        "expected_revision": case["service_revision"],
+        "work_performed": "Recorded replacement and connection checks",
+        "observed_result": "Recorded normal cooling during the final test",
+        "proof_file_name": "completion.jpg",
+    }
+    post(
+        client,
+        f"/cases/{case['id']}/service-reports",
+        body,
+        PROVIDER,
+        422,
+    )
 
 
 @pytest.mark.parametrize("amount", [-1, 1000001, 1.5, True, "1200"])

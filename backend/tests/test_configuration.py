@@ -28,13 +28,25 @@ def test_canonical_mode_cannot_silently_fall_back(monkeypatch):
         Settings()
 
 
-@pytest.mark.parametrize("name", ["gemini", "claude", "openai"])
-def test_real_models_fail_closed(name, monkeypatch):
+@pytest.mark.parametrize("name", ["claude", "openai"])
+def test_unreviewed_models_fail_closed(name, monkeypatch):
     monkeypatch.setenv("AI_PROVIDER", name)
-    with pytest.raises(ValidationError, match="unsupported"):
+    with pytest.raises(ValidationError, match="reviewed Gemini"):
         Settings()
     with pytest.raises(ValueError, match="proposed capabilities"):
         model_provider(name)
+
+
+@pytest.mark.parametrize("model", ["gemini-3.8-flash", "gemini-3.5-flash"])
+def test_reviewed_gemini_configuration_accepts_stable_models(model):
+    settings = Settings(ai_provider="gemini", ai_model=model)
+    assert settings.ai_provider == "gemini"
+    assert settings.ai_model == model
+
+
+def test_reviewed_gemini_configuration_rejects_unreviewed_model():
+    with pytest.raises(ValidationError, match="reviewed stable"):
+        Settings(ai_provider="gemini", ai_model="gemini-experimental")
 
 
 def test_credentials_excluded_from_serialization_and_repr(monkeypatch):

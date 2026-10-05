@@ -15,8 +15,8 @@ The canonical agent instruction is `backend/app/agent/prompt.py`, exposed by `/a
 | Closure                  | Assigned approved service + current service evidence + both provider and household flags                                                                                       |
 | Unresolved               | Clears the reporting party's confirmation, leaves/reopens case; scripted progression cannot override it                                                                        |
 | Forged events            | Generic endpoint permits only customer notes/emergency reports, not approvals, completion flags or service proof                                                               |
-| Evidence truth           | Fixture/mock records are DOCUMENTATION_SIMULATION, never LIVE_API                                                                                                              |
-| Unsupported integrations | Non-mock settings fail startup; no invented remote endpoints or silent fallback                                                                                                |
+| Evidence truth           | Gnani/Gemini are LIVE_API only when their reviewed endpoints are actually called; Pine Labs/Delhivery wizard responses remain DOCUMENTATION_SIMULATION                         |
+| Unsupported integrations | Default workflow rails stay mock; Gnani/Gemini require explicit enablement and backend keys; partner URL allowlists reject invented endpoints                                  |
 | Audit                    | Decisions include rules; connector operations are allowlisted reference-only request/response logs                                                                             |
 | Errors                   | No raw validation input or exception details reflected to clients; transaction rollback precedes denial audit                                                                  |
 
@@ -30,12 +30,12 @@ Customers or locally attributed providers can register provider-linked service d
 
 ## Truth labels
 
-- `LIVE_API`: verified response from a real external integration. **None are implemented.**
+- `LIVE_API`: server-reported response from an explicitly enabled Gnani STT or Gemini decision endpoint. A configured adapter that was not called is not live evidence.
 - `REAL_HUMAN_INPUT`: an actual local form submission. This labels provenance, not proof of identity or correctness.
 - `DOCUMENTATION_SIMULATION`: seeded examples, mock connectors, scripted approvals/confirmations, simulated evidence.
 - `PROPOSED_CAPABILITY`: a future capability with no implemented integration or verified outcome.
 
-A manually triggered mock connector remains documentary, even though the request originated in a human click. Saved customer/provider chat text is `REAL_HUMAN_INPUT`; deterministic assistant text is `DOCUMENTATION_SIMULATION`, not live inference or a real provider response. A chat draft alone is not a case, and confirming it creates an unquoted local request, not a booking or payment. Closure in the demo means its rules passed on its labeled inputs—not that anyone really repaired a purifier.
+A manually entered Pine Labs or Delhivery documentation response remains documentary, even though the request originated in a human click. Saved customer/provider chat text is `REAL_HUMAN_INPUT`; deterministic assistant text is `DOCUMENTATION_SIMULATION`, not live inference or a real provider response. A chat draft alone is not a case, and confirming it creates an unquoted local request, not a booking or payment. Closure in the demo means its rules passed on its labeled inputs—not that anyone really repaired a purifier.
 
 ## Emergency escalation
 

@@ -158,6 +158,45 @@ export interface Rail {
   truth_label: TruthLabel;
   operations: string[];
 }
+export interface PartnerRailContract {
+  connector: "Gnani" | "Pine Labs" | "Delhivery";
+  operation: string;
+  method: string;
+  endpoint: string;
+  execution:
+    | "live_api"
+    | "documentation_simulation"
+    | "wizard_documentation_input";
+  truth_label: TruthLabel;
+  documentation_url: string;
+  ready: boolean;
+  blocker: string | null;
+}
+export interface DocumentedRailResponse {
+  connector: "Pine Labs" | "Delhivery";
+  operation:
+    | "create_payment_link"
+    | "create_part_shipment"
+    | "track_part_shipment";
+  endpoint: string;
+  documentation_url: string;
+  request: Record<string, unknown>;
+  response: Record<string, unknown>;
+}
+export interface AgentContract {
+  provider: "mock" | "gemini";
+  model: string;
+  ready: boolean;
+  blocker: string | null;
+}
+export interface AgentRun {
+  case_id: string;
+  model: string;
+  status: "live_succeeded" | "live_failed";
+  decision: Decision | null;
+  notification: Notification | null;
+  connector_call: ConnectorCall;
+}
 export interface SimulationState {
   step: number;
   total_steps: number;

@@ -13,17 +13,20 @@ Use Python 3.12, Node 22.12+ (24 LTS recommended), and npm. The current workspac
 | `APP_ENV`               | `development`; deployment metadata, not an authentication switch |
 | `DATABASE_URL`          | Absolute local SQLite URL ending in `backend/data/ramukaka.db`   |
 | `CONNECTOR_MODE`        | `mock` only; any other value rejects startup                     |
-| `AI_PROVIDER`           | `mock` only; Gemini/Claude/OpenAI adapters are future extensions |
-| `AI_API_KEY`            | Empty, backend-only reserved secret                              |
-| `GNANI_API_KEY`         | Empty, reserved                                                  |
+| `AI_PROVIDER`           | `mock` by default; set `gemini` only for the reviewed live adapter |
+| `AI_MODEL`              | `gemini-3.8-flash` or reviewed fallback `gemini-3.5-flash`       |
+| `GEMINI_API_KEY`        | Empty; backend-only secret required for live agent decisions     |
+| `GNANI_API_KEY`         | Empty; required only for the explicit live Gnani STT console     |
+| `GNANI_LIVE_ENABLED`    | `false`; must be `true` to permit the reviewed Gnani endpoint    |
+| `GNANI_STT_URL`         | Reviewed `https://api.vachana.ai/stt/v3`; other URLs are rejected |
 | `PINE_LABS_API_KEY`     | Empty, reserved                                                  |
 | `DELHIVERY_API_KEY`     | Empty, reserved                                                  |
 | `WHATSAPP_ACCESS_TOKEN` | Empty, reserved                                                  |
-| `RK_FRONTEND_ORIGIN`    | `http://localhost:5173`; exact loopback origin only              |
+| `RK_FRONTEND_ORIGIN`    | `http://localhost:5173`; exact local HTTP or deployed HTTPS origin |
 | `RK_AUTO_MIGRATE`       | `true`; startup applies migrations                               |
 | `RK_AUTO_SEED`          | `true`; startup seeds when demo is missing                       |
 
-Canonical `DATABASE_URL`/`CONNECTOR_MODE` override their old `RK_` aliases. Secrets are `SecretStr`, excluded from representation and serialization, and are never sent to the frontend. No real key is needed. There is no `.env` containing real values.
+Canonical `DATABASE_URL`/`CONNECTOR_MODE` override their old `RK_` aliases. Secrets are `SecretStr`, excluded from representation and serialization, and are never sent to the frontend. Live Gnani and Gemini demonstrations require backend-only secrets in an untracked environment or Render secret settings; never paste keys into source, screenshots, logs or commits.
 
 Settings intentionally do not implicitly read `.env`. Uvicorn can explicitly load `.env.example` with `--env-file ../.env.example` from backend. Alembic/seed CLI use exported variables, so export the same `DATABASE_URL` for all three processes if overriding it. Relative SQLite paths resolve under `backend/` regardless of working directory; outside paths are rejected.
 
@@ -62,9 +65,15 @@ Use http://127.0.0.1:5173: `/` offers a customer or provider portal, `/customer/
 
 Build with `npm run build`; nginx's SPA fallback serves deep links in Compose. The backend image uses Python 3.12 and a non-root user; a named volume preserves database data. Compose loads only safe example values and forces mock mode. Docker must be installed; see verification record for whether it was available.
 
+For the protected online competition demo, use the root `render.yaml` and `Dockerfile.render` rather
+than the local Compose file. Follow the exact [Render deployment guide](deployment-render.md). The
+hosted image fails closed without a secret demo PIN, rate-limits Gnani, exposes only `/health`
+without authentication and uses ephemeral SQLite on Render's Free plan. Its demo data can reset on
+spin-down, restart or deploy. This is still not production identity or multi-tenant authorization.
+
 ## Validation
 
-From `backend/`, `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest --basetemp=data/pytest-tmp` passed **160 tests** in this workspace (one upstream Starlette deprecation warning). From `frontend/`, `npm test` passed **44 tests**; `npm run lint` and `npm run build` passed. To run real-server API and browser checks from the root, after installing project-local Chromium as described in the [README](../README.md), use `backend/.venv/bin/python scripts/smoke.py --browser` (or `--backend-port 18000 --frontend-port 15173` if your own servers already occupy the default ports). It uses an isolated temporary SQLite database, shuts down its subprocesses and writes ignored screenshots/logs under `artifacts/`; it also regenerates `shared/schemas/openapi.json`. Both browser scenarios passed in this workspace on alternate ports with an isolated database; the API-check phase of the runner was skipped to avoid rewriting `shared/schemas/openapi.json` during this documentation-only task. Browser smoke is not included in the unit-test counts. The requested `bash scripts/dev.sh` launch refused to start because port 8000 was occupied; no unrelated server was stopped.
+Current integration-MVP validation: **223 backend tests** and **56 frontend tests** passed; frontend lint and production build passed. Fake HTTP transports verify the Gnani and Gemini contracts without exposing credentials or making billable vendor requests. Run final real rehearsals after configuring both keys. To run real-server API and browser checks from the root, use `backend/.venv/bin/python scripts/smoke.py --browser` (or alternate ports). It uses an isolated temporary SQLite database and shuts down its subprocesses.
 
 ## Troubleshooting
 

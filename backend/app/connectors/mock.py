@@ -102,7 +102,19 @@ class DelhiveryMock(MockAdapter):
     def __init__(self):
         super().__init__(
             "Delhivery",
-            "Documentary dispatch/evidence placeholders; no actual shipment or technician API.",
+            "Partner logistics responses are captured through the competition rail console.",
+            {
+                "create_part_shipment": fields("case_id", "provider_id", "part_reference"),
+                "track_part_shipment": fields("case_id", "waybill"),
+            },
+        )
+
+
+class LocalCoordinatorMock(MockAdapter):
+    def __init__(self):
+        super().__init__(
+            "Local coordinator",
+            "Internal documentary provider assignment and service-report fixture.",
             {
                 "assign_provider": fields("case_id", "provider_id"),
                 "record_service_evidence": fields("case_id", "provider_id"),
@@ -153,6 +165,7 @@ class ConnectorRegistry:
                 GnaniMock(),
                 PineLabsMock(),
                 DelhiveryMock(),
+                LocalCoordinatorMock(),
                 WhatsAppMock(),
                 EmailMock(),
                 AIMock(),

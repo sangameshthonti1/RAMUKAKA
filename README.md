@@ -25,7 +25,7 @@ These are working local reminders, **not SMS, WhatsApp, email, browser push or p
 
 ## Automatic local coordination
 
-For a new case, save household coordinates in it's customer case view and shop coordinates in the provider portal. Opening an eligible customer case automatically chooses the nearest available matching **recorded** shop, persists a simulated provider conversation, and prepares a fixture offer. The customer approves **total cost and timing together**; assignment then happens automatically using local mocks. The provider portal's **Report simulated completion (mock)** action records provider-reported completion and a local customer notification. It never fabricates household verification.
+For a new case, save household coordinates in its customer case view and shop coordinates in the provider portal. Opening an eligible customer case automatically chooses the nearest available matching **recorded** shop, persists a simulated provider conversation, and prepares a fixture offer. The customer approves **total cost and timing together**; assignment then happens automatically using local mocks. The provider portal's **Report simulated completion (mock)** action records provider-reported completion and a local customer notification. It never fabricates household verification.
 
 The fixture total is **INR 1,500**, with a next-day **10:00–12:00 UTC** simulated slot. These are demonstration values, not market prices or actual availability. Distances use saved coordinates and Haversine straight-line distance, not road travel. Shops with unknown coordinates are excluded. State survives reload/restart; automatic offer preparation happens when the customer case page is open, not through a background worker.
 
@@ -120,7 +120,7 @@ The SQLite snapshot is verified and written under `backend/data/backups/` (ignor
 
 ## Tests and build
 
-In this workspace: **160 backend tests** and **44 frontend tests** passed; frontend lint and build also passed. Re-run with:
+In this workspace: **223 backend tests** and **58 frontend tests** passed; frontend lint and build also passed. Re-run with:
 
 ```sh
 # From backend/
@@ -147,12 +147,15 @@ The smoke script starts bounded subprocesses, uses an isolated temporary databas
 
 ## Run the Round 3 demonstration
 
-1. From `/`, choose a portal. For the scripted demo, visit `/project/simulation`. Acknowledge and reset RK-2048 if needed.
-2. Open `/project/cases/RK-2048`: Sangamesh's Kent water purifier has low water flow, a filter-replacement quote of **₹749**, and status **Waiting for approval**.
-3. Click **Try mock payment** before approving: the backend denies it and records the rule.
-4. Return to Simulation. Click **Run one step** six times: approval → assignment/mock payment → service evidence → provider confirmation → household confirmation → closure.
-5. Inspect the full timeline, evidence, decisions, request/response logs and truth labels.
-6. To demonstrate manual closure, reset, advance three steps, then use the Provider confirmation in `/provider` and Household confirmation in `/customer/cases/RK-2048` with matching demo attribution. Only the second confirmation closes the case. An unresolved report reopens it. For a new case without simulation,follow the [working model guide](docs/working-model.md).
+1. Open `/project/demo`. This is the primary jury and recording route.
+2. At every checkpoint, click **Run live agent decision**, then complete the single action shown directly beneath it.
+3. The same page advances through household approval, mock assignment, service evidence, provider confirmation, household confirmation and guarded closure. Demo attribution changes automatically.
+4. Open `/project/rails` only to demonstrate Gnani and the documented Pine Labs/Delhivery responses.
+5. Open `/project/evidence?case=RK-2048` to show the resulting decisions, evidence, connector calls and exact messages.
+
+The older `/project/simulation` route remains available for deterministic
+rehearsal, but it is no longer the main user journey. For a new case without
+simulation, follow the [working model guide](docs/working-model.md).
 
 A rejected quote blocks advancement; the simulator never silently reverses a rejection. All scripted approvals and confirmations are documentary fixtures, not actual people authorizing real transactions. See [simulation guide](docs/simulation-guide.md).
 
@@ -160,15 +163,17 @@ A rejected quote blocks advancement; the simulator never silently reverses a rej
 
 | Capability                      | Implemented behavior                                                                 |
 | ------------------------------- | ------------------------------------------------------------------------------------ |
-| Gnani                           | Mock intake; no call or transcription                                                |
-| Pine Labs                       | Mock payment receipt; no money movement                                              |
-| Delhivery                       | Documentary dispatch/evidence placeholder; no actual technician/shipment API claimed |
+| Gnani competition console       | Optional real STT call to `https://api.vachana.ai/stt/v3`; disabled until a local key is supplied |
+| Pine Labs competition console   | Exact official UAT payment-link request/response recorded as documentation simulation; no funds move |
+| Delhivery competition console   | Wizard records the exact official B2C shipment/tracking request and response; no shipment is created |
+| Default scripted workflow       | Deterministic local mocks remain available for repeatable rehearsal                   |
 | WhatsApp / Email                | Local connector logs; nothing delivered                                              |
-| Service chat / AI provider      | Persisted local messages and deterministic rules/fixtures; no model inference        |
-| Gemini / Claude / OpenAI        | Provider extension interface only; real adapters are proposed, disabled              |
+| Service chat                    | Persisted local messages and deterministic rules/fixtures                             |
+| Gemini agent decision           | Optional live `gemini-3.8-flash` structured next-action decision; server allowlist and guards remain authoritative |
+| Claude / OpenAI                 | Proposed only; no adapter enabled                                                      |
 | Local FastAPI / SQLite / signup | Actually executed locally; not an external `LIVE_API` integration                    |
 
-**Live external capabilities: none.** `LIVE_API` is reserved for a verified future integration. Every fixture/mock is `DOCUMENTATION_SIMULATION`; local user submissions are `REAL_HUMAN_INPUT`; roadmap claims are `PROPOSED_CAPABILITY`.
+`LIVE_API` is used only for server-recorded Gnani and Gemini HTTP calls when each is explicitly enabled. Pine Labs and Delhivery remain `DOCUMENTATION_SIMULATION`, as required by the Wizard-of-Oz brief. Local user submissions are `REAL_HUMAN_INPUT`; roadmap claims are `PROPOSED_CAPABILITY`.
 
 ## Containers
 
@@ -177,6 +182,16 @@ docker compose up --build
 ```
 
 Ports are loopback-bound at 5173/8000. SQLite persists in a named volume; nginx proxies the API. Docker is optional and must be installed separately. Container builds are not implied by passing local tests.
+
+## Protected online competition demo
+
+The repository includes a separate single-service Render deployment in `render.yaml` and
+`Dockerfile.render`. It serves the frontend and FastAPI on one origin, stores SQLite on Render's
+ephemeral free-tier filesystem, requires the username `demo` plus a secret PIN, rate-limits live
+Gnani uploads and leaves only
+`/health` unauthenticated. Follow [the Render and `runs-on.dev` guide](docs/deployment-render.md).
+This access gate is suitable for the bounded jury demo; it does not turn the application into a
+public multi-user production service. Free-tier SQLite can reset on spin-down, restart or deploy.
 
 ## Limits and next steps
 

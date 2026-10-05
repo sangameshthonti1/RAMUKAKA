@@ -11,6 +11,7 @@ describe("portal and project views", () => {
     ["/customer/chat", "Service chat"],
     ["/customer/cases", "Your cases"],
     ["/provider", "Provider Desk"],
+    ["/project/demo", "One repair. One clear next step."],
     ["/project/cases", "Case Room"],
     ["/project/simulation", "The simulation lab"],
     ["/project/evidence", "Evidence Ledger"],
@@ -38,6 +39,32 @@ describe("portal and project views", () => {
         String(url).startsWith("/api/"),
       ),
     ).toBe(true);
+  });
+  it("keeps the live agent and next human action on one guided page", async () => {
+    installMockApi();
+    const user = userEvent.setup();
+    renderApp("/project/demo");
+    expect(
+      await screen.findByRole("heading", {
+        name: "Approve the ₹749 service",
+      }),
+    ).toBeVisible();
+    await user.click(
+      screen.getByRole("button", { name: "Ask RamuKaka" }),
+    );
+    expect(
+      await screen.findByText("Please approve or reject the ₹749 quote."),
+    ).toBeVisible();
+    expect(screen.getByText("Live API · reported by server")).toBeVisible();
+    expect(
+      screen.getByText(/Nothing can be paid or assigned before the customer approves/),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Approve ₹749" }));
+    expect(
+      await screen.findByRole("heading", {
+        name: "Assign the approved provider",
+      }),
+    ).toBeVisible();
   });
   it("keeps role-specific navigation within each portal", async () => {
     installMockApi();
@@ -193,6 +220,21 @@ describe("portal and project views", () => {
       await screen.findByLabelText("Backend system prompt"),
     ).toHaveTextContent(
       "Backend-owned instructions: preserve the human approval boundary.",
+    );
+  });
+  it("offers direct microphone capture with an upload fallback", async () => {
+    installMockApi();
+    renderApp("/project/rails");
+    const user = userEvent.setup();
+    const record = await screen.findByRole("button", {
+      name: "Record with microphone",
+    });
+    expect(
+      screen.getByLabelText("Or upload an existing voice note").getAttribute("accept"),
+    ).toContain(".ogg");
+    await user.click(record);
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /does not support microphone recording/i,
     );
   });
   it("switches ledger sections and exposes request and response payloads", async () => {

@@ -1,7 +1,8 @@
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Network, ShieldCheck, Unplug } from "lucide-react";
+import { Mic, Network, ShieldCheck, Square, Trash2, Unplug } from "lucide-react";
 import { api } from "../services/api";
-import { keys } from "../hooks/useApi";
+import { keys, useApiMutation, useCases } from "../hooks/useApi";
 import {
   EmptyState,
   PageHeading,
@@ -10,9 +11,151 @@ import {
   RouteLink,
   StatusBadge,
   TruthBadge,
+  MutationFeedback,
 } from "../components/ui";
+import { SelectField, TextAreaField, TextField } from "../components/WorkspaceFields";
+import { formText } from "../utils/forms";
+import { gnaniTranscript } from "../utils/gnani";
 export default function RailsPage() {
+  const cases = useCases();
+  const [caseId, setCaseId] = useState("");
+  const [recording, setRecording] = useState(false);
+  const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
+  const [uploadedAudio, setUploadedAudio] = useState<File | null>(null);
+  const [languageCode, setLanguageCode] = useState("hi-IN");
+  const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
+  const [microphoneError, setMicrophoneError] = useState<string | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  useEffect(() => {
+    return () => {
+      if (recordingUrl) URL.revokeObjectURL(recordingUrl);
+    };
+  }, [recordingUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
+
+  const startRecording = async () => {
+    setMicrophoneError(null);
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setMicrophoneError("This browser does not support microphone recording. Use file upload instead.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      chunksRef.current = [];
+      setUploadedAudio(null);
+      const preferredType = [
+        "audio/ogg;codecs=opus",
+        "audio/ogg",
+        "audio/mp4",
+      ].find((type) => MediaRecorder.isTypeSupported(type));
+      if (!preferredType) {
+        stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        setMicrophoneError(
+          "This browser cannot record a Gnani-compatible OGG or M4A voice note. Use the file upload fallback with AAC, MP3, M4A, OGG, WAV, or FLAC.",
+        );
+        return;
+      }
+      const recorder = new MediaRecorder(stream, { mimeType: preferredType });
+      recorderRef.current = recorder;
+      recorder.ondataavailable = (event) => {
+        if (event.data.size) chunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        const mimeType = recorder.mimeType || chunksRef.current[0]?.type || preferredType;
+        const extension = mimeType.includes("ogg")
+          ? "ogg"
+          : mimeType.includes("mp4")
+            ? "m4a"
+            : "ogg";
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        if (blob.size) {
+          const file = new File([blob], `ramukaka-voice-${Date.now()}.${extension}`, {
+            type: mimeType,
+          });
+          setRecordedAudio(file);
+          setRecordingUrl(URL.createObjectURL(blob));
+        }
+        stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        setRecording(false);
+      };
+      recorder.start();
+      setRecording(true);
+    } catch (error) {
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      setMicrophoneError(
+        error instanceof DOMException && error.name === "NotAllowedError"
+          ? "Microphone permission was denied. Allow it in the browser or upload a voice note."
+          : "The microphone could not start. Check the selected input device or upload a voice note.",
+      );
+    }
+  };
+
+  const stopRecording = () => {
+    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+  };
+
+  const clearRecording = () => {
+    setRecordedAudio(null);
+    setRecordingUrl(null);
+    setMicrophoneError(null);
+  };
+
   const query = useQuery({ queryKey: keys.rails, queryFn: api.rails });
+  const contracts = useQuery({
+    queryKey: keys.partnerContracts,
+    queryFn: api.partnerContracts,
+  });
+  const agentContract = useQuery({
+    queryKey: keys.agentContract,
+    queryFn: api.agentContract,
+  });
+  const selectedCase = cases.data?.find((item) => item.id === caseId);
+  const gnani = useApiMutation(
+    ({ audio, language }: { audio: File; language: string }) =>
+      api.transcribeGnani(caseId, audio, language),
+  );
+  const transcript = gnaniTranscript(gnani.data);
+  const attachTranscript = useApiMutation((detail: string) =>
+    api.event(caseId, { type: "customer_note", detail }),
+  );
+  const agent = useApiMutation(() => api.runAgentDecision(caseId));
+  const pine = useApiMutation(
+    (data: FormData) =>
+      api.recordDocumentedResponse(caseId, {
+        connector: "Pine Labs",
+        operation: "create_payment_link",
+        endpoint: formText(data, "endpoint"),
+        documentation_url: formText(data, "documentation_url"),
+        request: JSON.parse(formText(data, "request")) as Record<string, unknown>,
+        response: JSON.parse(formText(data, "response")) as Record<string, unknown>,
+      }),
+  );
+  const delhivery = useApiMutation(
+    (data: FormData) =>
+      api.recordDocumentedResponse(caseId, {
+        connector: "Delhivery",
+        operation: formText(data, "operation") as
+          | "create_part_shipment"
+          | "track_part_shipment",
+        endpoint: formText(data, "endpoint"),
+        documentation_url: formText(data, "documentation_url"),
+        request: JSON.parse(formText(data, "request")) as Record<string, unknown>,
+        response: JSON.parse(formText(data, "response")) as Record<string, unknown>,
+      }),
+  );
   return (
     <>
       <PageHeading
@@ -67,6 +210,274 @@ export default function RailsPage() {
           <EmptyState title="No rails declared by the backend" />
         )}
       </QueryState>
+      <Panel title="Live agent decision" kicker="GEMINI · SYSTEM PROMPT" className="mt-6">
+        <div className="form-stack">
+          <div className="record-heading">
+            <div>
+              <strong>{agentContract.data?.model ?? "Gemini"}</strong>
+              <p className="small muted mt-2">
+                The model chooses one server-allowed next action. Backend approval and closure
+                guards remain authoritative.
+              </p>
+            </div>
+            <StatusBadge status={agentContract.data?.ready ? "ready" : "setup required"} />
+          </div>
+          {agentContract.data?.blocker && (
+            <p className="form-note">{agentContract.data.blocker}</p>
+          )}
+          <button
+            className="btn btn-primary"
+            type="button"
+            disabled={!caseId || !agentContract.data?.ready || agent.isPending}
+            onClick={() => agent.mutate(undefined)}
+          >
+            {agent.isPending ? "Gemini is deciding…" : "Run agent decision"}
+          </button>
+          <MutationFeedback
+            mutation={agent}
+            success="Gemini chose a next action and the backend recorded its exact in-app message."
+          />
+          {agent.data?.decision && agent.data.notification && (
+            <div className="disclosure">
+              <div className="record-heading">
+                <h3>{agent.data.decision.action.replaceAll("_", " ")}</h3>
+                <TruthBadge label="LIVE_API" />
+              </div>
+              <p className="mt-3">{agent.data.decision.reason}</p>
+              <div className="rule-box mt-3">
+                <span className="tiny-label">RULE APPLIED</span>
+                <p>{agent.data.decision.rule}</p>
+              </div>
+              <div className="disclosure mt-3">
+                <span className="tiny-label">ACTUAL IN-APP MESSAGE</span>
+                <p className="mt-2">{agent.data.notification.message}</p>
+                <p className="small muted mt-2">To: {agent.data.notification.channel}</p>
+              </div>
+            </div>
+          )}
+          {agent.data?.status === "live_failed" && (
+            <p className="error-text" role="alert">
+              Gemini did not return a valid allowed decision. The failed call was recorded; no
+              action or message was created.
+            </p>
+          )}
+        </div>
+      </Panel>
+      <QueryState
+        pending={contracts.isPending}
+        error={contracts.error}
+        retry={() => void contracts.refetch()}
+      >
+        <Panel title="Competition rail contracts" className="mt-6">
+          <div className="rail-grid">
+            {contracts.data?.map((contract) => (
+              <article key={contract.connector} className="disclosure">
+                <div className="record-heading">
+                  <h3>{contract.connector}</h3>
+                  <StatusBadge status={contract.ready ? "ready" : "setup required"} />
+                </div>
+                <TruthBadge label={contract.truth_label} />
+                <p className="small muted mt-3">
+                  {contract.method} · <code>{contract.endpoint}</code>
+                </p>
+                <p className="small muted">{contract.blocker ?? contract.execution}</p>
+                <a href={contract.documentation_url} target="_blank" rel="noreferrer">
+                  Official documentation
+                </a>
+              </article>
+            ))}
+          </div>
+        </Panel>
+      </QueryState>
+      <QueryState
+        pending={cases.isPending}
+        error={cases.error}
+        retry={() => void cases.refetch()}
+      >
+        <Panel title="Choose the case for this run" className="mt-6">
+          <div className="form-stack">
+            <SelectField
+              label="Target case and appliance"
+              name="case_id"
+              value={caseId}
+              onChange={(event) => {
+                setCaseId(event.target.value);
+                gnani.reset();
+                attachTranscript.reset();
+              }}
+            >
+              <option value="">Select a case before calling a partner</option>
+              {cases.data?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.id} · {item.title} · {item.complaint}
+                </option>
+              ))}
+            </SelectField>
+            {selectedCase && (
+              <div className="disclosure">
+                <strong>{selectedCase.title}</strong>
+                <p className="small muted mt-2">Customer report: {selectedCase.complaint}</p>
+                <p className="small muted">Current state: {selectedCase.status}</p>
+              </div>
+            )}
+            <p className="form-note">
+              Every Gnani, Pine Labs and Delhivery record below is attached to this visible case.
+              This prevents a voice note for one appliance being silently written to another.
+            </p>
+          </div>
+        </Panel>
+      </QueryState>
+      <div className="detail-grid mt-6">
+        <Panel title="1. Run Gnani STT live" kicker="REAL PARTNER CALL">
+          <form
+            className="form-stack"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const audio = recordedAudio ?? uploadedAudio;
+              if (audio?.size) gnani.mutate({ audio, language: languageCode });
+              else setMicrophoneError("Record a voice note or choose an audio file first.");
+            }}
+          >
+            <div>
+              <span className="field-label">Record a voice note now</span>
+              <div className="button-row mt-3">
+                {!recording ? (
+                  <button className="btn btn-secondary" type="button" onClick={() => void startRecording()}>
+                    <Mic size={16} /> Record with microphone
+                  </button>
+                ) : (
+                  <button className="btn btn-approval" type="button" onClick={stopRecording}>
+                    <Square size={15} /> Stop recording
+                  </button>
+                )}
+                {recordedAudio && !recording && (
+                  <button className="btn btn-secondary" type="button" onClick={clearRecording}>
+                    <Trash2 size={15} /> Discard recording
+                  </button>
+                )}
+              </div>
+              {recording && <p className="form-note mt-3">Recording… speak naturally, then press Stop recording.</p>}
+              {recordingUrl && (
+                <div className="voice-preview mt-3">
+                  <audio controls src={recordingUrl} aria-label="Recorded voice note preview" />
+                  <p className="form-note">Recorded locally. Review it, then send it to Gnani below.</p>
+                </div>
+              )}
+              {microphoneError && <p className="error-text mt-3" role="alert">{microphoneError}</p>}
+            </div>
+            <TextField
+              label="Or upload an existing voice note"
+              name="audio"
+              type="file"
+              accept=".aac,.mp3,.m4a,.ogg,.wav,.flac,audio/aac,audio/mpeg,audio/mp4,audio/ogg,audio/wav,audio/flac"
+              onChange={(event) => {
+                clearRecording();
+                setUploadedAudio(event.target.files?.[0] ?? null);
+              }}
+            />
+            <SelectField
+              label="Language"
+              name="language_code"
+              value={languageCode}
+              onChange={(event) => setLanguageCode(event.target.value)}
+            >
+              <option value="hi-IN">Hindi</option>
+              <option value="en-IN">Indian English</option>
+              <option value="kn-IN">Kannada</option>
+              <option value="ta-IN">Tamil</option>
+              <option value="te-IN">Telugu</option>
+              <option value="mr-IN">Marathi</option>
+            </SelectField>
+            <p className="form-note">
+              Microphone audio remains in the browser until you press Send. The backend then sends
+              it to Gnani and logs its SHA-256 plus the exact raw response. Audio bytes and the API
+              key are never written to the ledger.
+            </p>
+            <button className="btn btn-primary" disabled={gnani.isPending || recording || !caseId}>
+              {gnani.isPending ? "Calling Gnani…" : "Send voice note to Gnani"}
+            </button>
+            {gnani.isSuccess && gnani.data.status !== "live_succeeded" ? (
+              <p className="error-text" role="alert">
+                Gnani returned a failed live response. The failure was preserved in the connector
+                ledger; inspect it before retrying.
+              </p>
+            ) : (
+              <MutationFeedback
+                mutation={gnani}
+                success="Gnani transcription succeeded and was recorded in the connector ledger."
+              />
+            )}
+            {gnani.isSuccess && gnani.data.status === "live_succeeded" && !transcript && (
+              <p className="error-text" role="alert">
+                Gnani succeeded, but no transcript field could be found in its response. The exact
+                response remains available in the connector ledger and nothing was added to the case.
+              </p>
+            )}
+            {transcript && (
+              <div className="disclosure">
+                <span className="tiny-label">GNANI TRANSCRIPT — REVIEW BEFORE ATTACHING</span>
+                <p className="mt-3" lang="hi">{transcript}</p>
+                <p className="form-note mt-3">
+                  This is external speech-to-text output, not proof of service, approval or completion.
+                </p>
+                <button
+                  className="btn btn-approval mt-3"
+                  type="button"
+                  disabled={attachTranscript.isPending || attachTranscript.isSuccess}
+                  onClick={() => attachTranscript.mutate(transcript)}
+                >
+                  {attachTranscript.isPending
+                    ? "Attaching transcript…"
+                    : attachTranscript.isSuccess
+                      ? "Transcript attached"
+                      : `Confirm and attach to ${caseId}`}
+                </button>
+              </div>
+            )}
+            <MutationFeedback
+              mutation={attachTranscript}
+              success="Transcript added as real human input. The agent recorded its context-only decision and did not treat it as evidence or approval."
+            />
+          </form>
+        </Panel>
+        <Panel title="2. Record Pine Labs response" kicker="DOCUMENTATION SIMULATION">
+          <form
+            className="form-stack"
+            onSubmit={(event) => {
+              event.preventDefault();
+              pine.mutate(new FormData(event.currentTarget));
+            }}
+          >
+            <TextField label="Endpoint" name="endpoint" readOnly defaultValue="https://pluraluat.v2.pinepg.in/api/pay/v1/paymentlink" />
+            <TextField label="Official documentation" name="documentation_url" readOnly defaultValue="https://www.pinelabs.com/docs/online-payments/api/payment-links/create-payment-link" />
+            <TextAreaField label="Request JSON" name="request" required rows={7} defaultValue={'{\n  "amount": {"value": 74900, "currency": "INR"},\n  "description": "RK-2048 filter replacement",\n  "merchant_payment_link_reference": "RK-2048"\n}'} />
+            <TextAreaField label="Exact documented response JSON" name="response" required rows={7} defaultValue={'{\n  "payment_link": "https://shortener.v2.pinepg.in/PLUTUS/documentary",\n  "payment_link_id": "pl-documentary-RK-2048",\n  "status": "CREATED",\n  "amount": {"value": 74900, "currency": "INR"}\n}'} />
+            <button className="btn btn-primary" disabled={pine.isPending || !caseId}>Record Pine Labs response</button>
+            <MutationFeedback mutation={pine} success="Exact Pine Labs documentation response recorded." />
+          </form>
+        </Panel>
+      </div>
+      <Panel title="3. Record Delhivery response" kicker="WIZARD USES PROVIDED DOCUMENTATION" className="mt-6">
+        <form
+          className="form-stack"
+          onSubmit={(event) => {
+            event.preventDefault();
+            delhivery.mutate(new FormData(event.currentTarget));
+          }}
+        >
+          <SelectField label="Operation" name="operation" defaultValue="create_part_shipment">
+            <option value="create_part_shipment">Create part shipment</option>
+            <option value="track_part_shipment">Track part shipment</option>
+          </SelectField>
+          <TextField label="Exact Delhivery endpoint" name="endpoint" type="url" required placeholder="Paste from the competition documentation" />
+          <TextField label="Official documentation URL" name="documentation_url" type="url" required defaultValue="https://help.delhivery.com/docs/client-developer-portal-1" />
+          <TextAreaField label="Exact request JSON" name="request" required rows={6} placeholder="Paste the request matching the documentation" />
+          <TextAreaField label="Exact documented response JSON" name="response" required rows={6} placeholder="Paste exactly what the documentation says Delhivery returns" />
+          <p className="form-note">The backend rejects non-Delhivery domains and does not claim that a real shipment was created.</p>
+          <button className="btn btn-primary" disabled={delhivery.isPending || !caseId}>Record Delhivery response</button>
+          <MutationFeedback mutation={delhivery} success="Exact Delhivery documentation response recorded." />
+        </form>
+      </Panel>
       <div className="detail-grid mt-6">
         <Panel title="Local API surface">
           <dl className="endpoint-list">

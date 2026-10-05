@@ -167,6 +167,46 @@ export function installMockApi() {
           };
           return json(state.simulation);
         }
+        if (path === "/api/agent/RK-2048/decide") {
+          const decision: Decision = {
+            id: "D-GEMINI",
+            case_id: "RK-2048",
+            action: "request_household_approval",
+            reason: "The current quote still needs consent.",
+            rule: "APPROVAL_REQUIRED",
+            truth_label: "LIVE_API",
+            created_at: timestamp,
+          };
+          return json(
+            {
+              case_id: "RK-2048",
+              model: "gemini-3.8-flash",
+              status: "live_succeeded",
+              decision,
+              notification: {
+                id: "N-GEMINI",
+                case_id: "RK-2048",
+                channel: "in_app:household",
+                message: "Please approve or reject the ₹749 quote.",
+                truth_label: "LIVE_API",
+                status: "displayed",
+                created_at: timestamp,
+              },
+              connector_call: {
+                id: "C-GEMINI",
+                case_id: "RK-2048",
+                connector: "Gemini",
+                operation: "decide_next_action",
+                request: {},
+                response: {},
+                truth_label: "LIVE_API",
+                status: "live_succeeded",
+                created_at: timestamp,
+              },
+            },
+            201,
+          );
+        }
         if (path === "/api/cases") {
           const item = {
             ...structuredClone(caseFixture),
@@ -286,6 +326,38 @@ export function installMockApi() {
             operations: ["payment"],
           },
         ],
+        "/api/partner-rails/contracts": [
+          {
+            connector: "Gnani",
+            operation: "transcribe_audio",
+            method: "POST",
+            endpoint: "https://api.vachana.ai/stt/v3",
+            execution: "live_api",
+            truth_label: "LIVE_API",
+            documentation_url: "https://www.gnani.ai/speech-to-text-api",
+            ready: false,
+            blocker: "Set the local key.",
+          },
+          {
+            connector: "Pine Labs",
+            operation: "create_payment_link",
+            method: "POST",
+            endpoint:
+              "https://pluraluat.v2.pinepg.in/api/pay/v1/paymentlink",
+            execution: "documentation_simulation",
+            truth_label: "DOCUMENTATION_SIMULATION",
+            documentation_url:
+              "https://www.pinelabs.com/docs/online-payments/api/payment-links/create-payment-link",
+            ready: true,
+            blocker: null,
+          },
+        ],
+        "/api/agent/contract": {
+          provider: "gemini",
+          model: "gemini-3.8-flash",
+          ready: true,
+          blocker: null,
+        },
         "/api/system-prompt": {
           prompt:
             "Backend-owned instructions: preserve the human approval boundary.",
